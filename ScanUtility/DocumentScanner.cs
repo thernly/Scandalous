@@ -27,11 +27,11 @@ public class DocumentScanner
     {
 
         var device = await GetFirstAvailableDevice() ?? throw new InvalidOperationException("No scanner device available.");
-        var imageNumber = 0;
         var options = GetScanOptions(device, mode);
         await foreach (var image in _scanController.Scan(options))
         {
-            var outputFile = Path.Combine(outputFolder, $"scan-{imageNumber++}.png");
+            Guid guid = Guid.NewGuid();
+            var outputFile = Path.Combine(outputFolder, $"scan-{guid}.png");
             image.Save(outputFile, ImageFileFormat.Png);
             OnPageScanned(outputFile);
         }

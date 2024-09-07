@@ -4,13 +4,13 @@ using NAPS2.Scan.Exceptions;
 
 namespace WinFormsApp1;
 
-public partial class Form1 : Form
+public partial class FormScan : Form
 {
     private DocumentScanner scanner;
     private int _currentImageNumber = 0;
     private readonly List<string> _imageFileList;
 
-    public Form1()
+    public FormScan()
     {
         InitializeComponent();
         scanner = new DocumentScanner();
@@ -20,6 +20,8 @@ public partial class Form1 : Form
 
     private async void scanButton_ClickAsync(object sender, EventArgs e)
     {
+        Cursor = Cursors.WaitCursor;
+
         _imageFileList.Clear();
         try
         {
@@ -33,9 +35,13 @@ public partial class Form1 : Form
         {
             MessageBox.Show($"Scan Driver Unknown Exception", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+        finally
+        {
+            Cursor = Cursors.Default;
+        }
     }
 
-    private void button1_Click(object sender, EventArgs e)
+    private void buttonOutputFolder_Click(object sender, EventArgs e)
     {
         folderBrowserDialog1.SelectedPath = label1.Text;
         var result = folderBrowserDialog1.ShowDialog();
@@ -85,11 +91,15 @@ public partial class Form1 : Form
 
     }
 
-    private void button2_Click(object sender, EventArgs e)
+    private void buttonLoad_Click(object sender, EventArgs e)
     {
-
-        _imageFileList.AddRange(Directory.GetFiles(label1.Text, "*.png"));
-        pictureBox1.Image = Image.FromFile(_imageFileList[0]);
+        Cursor = Cursors.WaitCursor;
+        try
+        {
+            _imageFileList.AddRange(Directory.GetFiles(label1.Text, "*.png"));
+            pictureBox1.Image = Image.FromFile(_imageFileList[0]);
+        }
+        finally { Cursor = Cursors.Default; }
     }
 
     private ScannerColorMode GetScannerColorMode()
