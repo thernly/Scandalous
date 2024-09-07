@@ -3,7 +3,7 @@ using NAPS2.Images.Gdi;
 using NAPS2.Images;
 
 
-namespace WinFormsApp1;
+namespace ScanUtility;
 
 public enum ScannerColorMode
 {

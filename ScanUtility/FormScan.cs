@@ -1,8 +1,7 @@
-
-
 using NAPS2.Scan.Exceptions;
 
-namespace WinFormsApp1;
+
+namespace ScanUtility;
 
 public partial class FormScan : Form
 {
