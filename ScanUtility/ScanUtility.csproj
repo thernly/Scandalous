@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NAPS2.Images.Gdi" Version="1.1.2" />
-    <PackageReference Include="NAPS2.Sdk" Version="1.1.2" />
+    <PackageReference Include="NAPS2.Images.Gdi" Version="1.1.3" />
+    <PackageReference Include="NAPS2.Sdk" Version="1.1.3" />
   </ItemGroup>
 
 </Project>
