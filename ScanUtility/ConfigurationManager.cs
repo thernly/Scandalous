@@ -20,9 +20,16 @@ namespace ScanUtility
 
         public ConfigurationManager()
         {
-            var applicationDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            Directory.CreateDirectory(applicationDataPath);
-            _configFilePath = Path.Combine(applicationDataPath, ConfigFileName);
+            var userAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string? appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+            if (appName == null)
+            {
+                appName = "ScanUtility";
+            }
+            var appDataPath = Path.Combine(userAppDataPath, appName);
+
+            Directory.CreateDirectory(appDataPath);
+            _configFilePath = Path.Combine(appDataPath, ConfigFileName);
         }
 
         public async Task SaveConfigurationAsync(ScanConfiguration configuration)
