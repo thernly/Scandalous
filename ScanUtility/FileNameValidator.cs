@@ -53,12 +53,11 @@ namespace ScanUtility
             }
 
             // Rule: Check for invalid characters.
-            foreach (char c in name)
+            int invalidCharIndex = name.IndexOfAny(InvalidFileNameCharsInternal);
+            if (invalidCharIndex != -1)
             {
-                if (InvalidFileNameCharsInternal.Contains(c))
-                {
-                    return (false, $"{displayName} '{name}' contains an invalid character: '{c}'.");
-                }
+                char invalidChar = name[invalidCharIndex];
+                return (false, $"{displayName} '{name}' contains an invalid character: '{invalidChar}'.");
             }
 
             string nameToCheckForReserved;

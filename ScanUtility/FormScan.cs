@@ -1,6 +1,4 @@
-using NAPS2.Scan;
 using NAPS2.Scan.Exceptions;
-using System.Drawing.Imaging;
 
 
 namespace ScanUtility;
