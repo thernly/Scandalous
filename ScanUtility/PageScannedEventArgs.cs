@@ -1,12 +1,7 @@
 ﻿namespace ScanUtility
 {
-    public class PageScannedEventArgs : EventArgs
+    public class PageScannedEventArgs(string imageFilePath) : EventArgs
     {
-        public string ImageFilePath { get; }
-
-        public PageScannedEventArgs(string imageFilePath)
-        {
-            ImageFilePath = imageFilePath;
-        }
+        public string ImageFilePath { get; } = imageFilePath;
     }
 }

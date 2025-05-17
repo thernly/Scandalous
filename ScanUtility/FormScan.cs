@@ -15,7 +15,7 @@ public partial class FormScan : Form
         InitializeComponent();
         scanner = new DocumentScanner();
         scanner.PageScanned += OnPageScanned;
-        _imageFileList = new List<string>();
+        _imageFileList = [];
     }
 
     private async void ScanButton_ClickAsync(object sender, EventArgs e)
@@ -55,7 +55,7 @@ public partial class FormScan : Form
         try
         {
             LabelStatus.Text = "Scanning...";
-            await scanner.ScanDocumentsFromFeeder(scanConfiguration);
+            await scanner.ScanDocuments(scanConfiguration);
             LabelStatus.Text = "Scanning completed.";
         }
         catch (DeviceFeederEmptyException)

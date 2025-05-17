@@ -6,7 +6,7 @@ namespace ScanUtility
     {
         private const string ConfigFileName = "ScanUtilityConfig.json";
         private readonly string _configFilePath;
-        private static readonly JsonSerializerOptions CachedJsonSerializerOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions CachedJsonSerializerOptions = new()
         {
             WriteIndented = true,
             MaxDepth = 10,
@@ -17,10 +17,7 @@ namespace ScanUtility
         {
             var userAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string? appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
-            if (appName == null)
-            {
-                appName = "ScanUtility";
-            }
+            appName ??= "ScanUtility";
             var appDataPath = Path.Combine(userAppDataPath, appName);
 
             Directory.CreateDirectory(appDataPath);
