@@ -29,13 +29,15 @@ public partial class FormScan : Form
         {
             documentOptions = DocumentOptions.Combined;
         }
-        ScanConfiguration scanConfiguration;
         var colorMode = GetScannerColorMode();
+        var dpi = int.Parse(ComboBoxDpi.Text);
+
+        ScanConfiguration scanConfiguration;
         try
-        { 
-        scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, colorMode,
-                                                      documentOptions, chkAutoDeskew.Checked, chkExcludeBlankPages.Checked, 300,
-                                                      ScannerPaperSource.FeederDuplex);
+        {
+            scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, colorMode,
+                                                          documentOptions, chkAutoDeskew.Checked, chkExcludeBlankPages.Checked, dpi,
+                                                          ScannerPaperSource.FeederDuplex);
         }
         catch (ArgumentException ex)
         {
@@ -163,10 +165,10 @@ public partial class FormScan : Form
     {
         if (scanConfiguration.DocumentOptions == DocumentOptions.Combined)
         {
-            
+
             var pdfFilePath = Path.Combine(scanConfiguration.OutputFolder, $"{scanConfiguration.OutputBaseFileName}.pdf");
             try
-            {                 
+            {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = pdfFilePath,
@@ -181,4 +183,35 @@ public partial class FormScan : Form
         }
     }
 
+    private async void FormScan_Load(object sender, EventArgs e)
+    {
+        var configManager = new ConfigurationManager();
+        var scanConfiguration = await configManager.LoadConfigurationAsync();
+        LabelOutputFolder.Text = scanConfiguration.OutputFolder;
+        TextBoxBaseFilename.Text = scanConfiguration.OutputBaseFileName;
+        chkAutoDeskew.Checked = scanConfiguration.AutoDeskew;
+        chkExcludeBlankPages.Checked = scanConfiguration.ExcludeBlankPages;
+        radioDocumentIndividual.Checked = scanConfiguration.DocumentOptions == DocumentOptions.Individual;
+        radioDocumentCombined.Checked = scanConfiguration.DocumentOptions == DocumentOptions.Combined;
+        radioButtonGrayscale.Checked = scanConfiguration.ColorMode == ScannerColorMode.Grayscale;
+        radioButtonBlackWhite.Checked = scanConfiguration.ColorMode == ScannerColorMode.BlackAndWhite;
+        radioButtonColor.Checked = scanConfiguration.ColorMode == ScannerColorMode.Color;
+        ComboBoxDpi.Text = scanConfiguration.ScanResolutionDPI.ToString();
+    }
+
+    private void FormScan_Shown(object sender, EventArgs e)
+    {
+        TextBoxBaseFilename.SelectAll();
+        TextBoxBaseFilename.Focus();
+        ComboBoxDpi.SelectedIndex = 1;
+    }
+
+    private async void FormScan_Closing(object sender, FormClosingEventArgs e)
+    {
+        var configManager = new ConfigurationManager();
+        var scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, GetScannerColorMode(),
+            radioDocumentCombined.Checked ? DocumentOptions.Combined : DocumentOptions.Individual, chkAutoDeskew.Checked,
+            chkExcludeBlankPages.Checked, int.Parse(ComboBoxDpi.Text), ScannerPaperSource.FeederDuplex);
+        await configManager.SaveConfigurationAsync(scanConfiguration);
+    }
 }

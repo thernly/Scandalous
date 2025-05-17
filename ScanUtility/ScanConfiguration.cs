@@ -2,6 +2,9 @@
 {
     public class ScanConfiguration
     {
+        public ScanConfiguration() {
+            // Default constructor for deserialization.
+        }
         public ScanConfiguration(string folder, string baseFileName, ScannerColorMode colorMode = ScannerColorMode.Grayscale,
                                  DocumentOptions documentOptions = DocumentOptions.Combined, bool autoDeskew = true,
                                  bool excludeBlankPages = true, int scanResolutionDpi = 300, ScannerPaperSource scannerPaperSource = ScannerPaperSource.Auto)
@@ -23,7 +26,7 @@
         }
         public string OutputFolder { get; set; } = string.Empty;
         public string OutputBaseFileName { get; set; } = string.Empty;
-        public ScannerColorMode ColorMode { get; set; } = ScannerColorMode.Color;
+        public ScannerColorMode ColorMode { get; set; } = ScannerColorMode.Grayscale;
         public DocumentOptions DocumentOptions { get; set; } = DocumentOptions.Combined;
         public bool AutoDeskew { get; set; } = true;
         public bool ExcludeBlankPages { get; set; } = true;

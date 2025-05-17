@@ -41,6 +41,8 @@
             chkExcludeBlankPages = new CheckBox();
             chkAutoDeskew = new CheckBox();
             grpDocumentOptions = new GroupBox();
+            LabelDpi = new Label();
+            ComboBoxDpi = new ComboBox();
             radioDocumentCombined = new RadioButton();
             radioDocumentIndividual = new RadioButton();
             grpColorMode = new GroupBox();
@@ -131,6 +133,7 @@
             TextBoxBaseFilename.Name = "TextBoxBaseFilename";
             TextBoxBaseFilename.Size = new Size(252, 23);
             TextBoxBaseFilename.TabIndex = 22;
+            TextBoxBaseFilename.Text = "output";
             // 
             // LabelBaseFilename
             // 
@@ -178,6 +181,8 @@
             // 
             // grpDocumentOptions
             // 
+            grpDocumentOptions.Controls.Add(LabelDpi);
+            grpDocumentOptions.Controls.Add(ComboBoxDpi);
             grpDocumentOptions.Controls.Add(radioDocumentCombined);
             grpDocumentOptions.Controls.Add(radioDocumentIndividual);
             grpDocumentOptions.Location = new Point(16, 166);
@@ -186,6 +191,25 @@
             grpDocumentOptions.TabIndex = 19;
             grpDocumentOptions.TabStop = false;
             grpDocumentOptions.Text = "Document Options";
+            // 
+            // LabelDpi
+            // 
+            LabelDpi.AutoSize = true;
+            LabelDpi.Location = new Point(274, 22);
+            LabelDpi.Name = "LabelDpi";
+            LabelDpi.Size = new Size(25, 15);
+            LabelDpi.TabIndex = 21;
+            LabelDpi.Text = "DPI";
+            // 
+            // ComboBoxDpi
+            // 
+            ComboBoxDpi.DropDownStyle = ComboBoxStyle.DropDownList;
+            ComboBoxDpi.FormattingEnabled = true;
+            ComboBoxDpi.Items.AddRange(new object[] { "150", "300", "600", "1200" });
+            ComboBoxDpi.Location = new Point(215, 17);
+            ComboBoxDpi.Name = "ComboBoxDpi";
+            ComboBoxDpi.Size = new Size(54, 23);
+            ComboBoxDpi.TabIndex = 20;
             // 
             // radioDocumentCombined
             // 
@@ -343,6 +367,9 @@
             Controls.Add(pictureBox1);
             Name = "FormScan";
             Text = "ScanUtility";
+            FormClosing += FormScan_Closing;
+            Load += FormScan_Load;
+            Shown += FormScan_Shown;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             groupScanControls.ResumeLayout(false);
             groupScanControls.PerformLayout();
@@ -383,5 +410,7 @@
         private TextBox TextBoxBaseFilename;
         private Label LabelStatusLabel;
         private Label LabelStatus;
+        private ComboBox ComboBoxDpi;
+        private Label LabelDpi;
     }
 }
