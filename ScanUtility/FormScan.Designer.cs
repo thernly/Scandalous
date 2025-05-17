@@ -38,11 +38,14 @@
             TextBoxBaseFilename = new TextBox();
             LabelBaseFilename = new Label();
             groupBox1 = new GroupBox();
+            RadioButtonFlatbed = new RadioButton();
+            RadioButtonFeederSimplex = new RadioButton();
+            RadioButtonFeederDuplex = new RadioButton();
+            LabelDpi = new Label();
+            ComboBoxDpi = new ComboBox();
             chkExcludeBlankPages = new CheckBox();
             chkAutoDeskew = new CheckBox();
             grpDocumentOptions = new GroupBox();
-            LabelDpi = new Label();
-            ComboBoxDpi = new ComboBox();
             radioDocumentCombined = new RadioButton();
             radioDocumentIndividual = new RadioButton();
             grpColorMode = new GroupBox();
@@ -51,12 +54,9 @@
             radioButtonGrayscale = new RadioButton();
             lstScanners = new ListBox();
             btnGetScannerList = new Button();
-            buttonLoad = new Button();
             scanButton = new Button();
             LabelOutputFolder = new Label();
             buttonOutputFolder = new Button();
-            buttonNext = new Button();
-            buttonPrevious = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             groupScanControls.SuspendLayout();
             groupBox1.SuspendLayout();
@@ -92,16 +92,13 @@
             groupScanControls.Controls.Add(grpColorMode);
             groupScanControls.Controls.Add(lstScanners);
             groupScanControls.Controls.Add(btnGetScannerList);
-            groupScanControls.Controls.Add(buttonLoad);
             groupScanControls.Controls.Add(scanButton);
             groupScanControls.Controls.Add(LabelOutputFolder);
             groupScanControls.Controls.Add(buttonOutputFolder);
-            groupScanControls.Controls.Add(buttonNext);
-            groupScanControls.Controls.Add(buttonPrevious);
             groupScanControls.Dock = DockStyle.Left;
             groupScanControls.Location = new Point(0, 0);
             groupScanControls.Name = "groupScanControls";
-            groupScanControls.Size = new Size(376, 643);
+            groupScanControls.Size = new Size(401, 643);
             groupScanControls.TabIndex = 11;
             groupScanControls.TabStop = false;
             // 
@@ -109,7 +106,7 @@
             // 
             LabelStatus.AutoSize = true;
             LabelStatus.BorderStyle = BorderStyle.FixedSingle;
-            LabelStatus.Location = new Point(22, 442);
+            LabelStatus.Location = new Point(22, 515);
             LabelStatus.MaximumSize = new Size(340, 86);
             LabelStatus.MinimumSize = new Size(340, 52);
             LabelStatus.Name = "LabelStatus";
@@ -120,7 +117,7 @@
             // LabelStatusLabel
             // 
             LabelStatusLabel.AutoSize = true;
-            LabelStatusLabel.Location = new Point(19, 421);
+            LabelStatusLabel.Location = new Point(19, 494);
             LabelStatusLabel.Name = "LabelStatusLabel";
             LabelStatusLabel.Size = new Size(39, 15);
             LabelStatusLabel.TabIndex = 23;
@@ -146,21 +143,77 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(RadioButtonFlatbed);
+            groupBox1.Controls.Add(RadioButtonFeederSimplex);
+            groupBox1.Controls.Add(RadioButtonFeederDuplex);
+            groupBox1.Controls.Add(LabelDpi);
+            groupBox1.Controls.Add(ComboBoxDpi);
             groupBox1.Controls.Add(chkExcludeBlankPages);
             groupBox1.Controls.Add(chkAutoDeskew);
             groupBox1.Location = new Point(16, 229);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(349, 57);
+            groupBox1.Size = new Size(364, 106);
             groupBox1.TabIndex = 20;
             groupBox1.TabStop = false;
             groupBox1.Text = "Scan Options";
+            // 
+            // RadioButtonFlatbed
+            // 
+            RadioButtonFlatbed.AutoSize = true;
+            RadioButtonFlatbed.Location = new Point(236, 59);
+            RadioButtonFlatbed.Name = "RadioButtonFlatbed";
+            RadioButtonFlatbed.Size = new Size(64, 19);
+            RadioButtonFlatbed.TabIndex = 26;
+            RadioButtonFlatbed.Text = "Flatbed";
+            RadioButtonFlatbed.UseVisualStyleBackColor = true;
+            // 
+            // RadioButtonFeederSimplex
+            // 
+            RadioButtonFeederSimplex.AutoSize = true;
+            RadioButtonFeederSimplex.Location = new Point(121, 59);
+            RadioButtonFeederSimplex.Name = "RadioButtonFeederSimplex";
+            RadioButtonFeederSimplex.Size = new Size(105, 19);
+            RadioButtonFeederSimplex.TabIndex = 25;
+            RadioButtonFeederSimplex.Text = "Feeder Simplex";
+            RadioButtonFeederSimplex.UseVisualStyleBackColor = true;
+            // 
+            // RadioButtonFeederDuplex
+            // 
+            RadioButtonFeederDuplex.AutoSize = true;
+            RadioButtonFeederDuplex.Checked = true;
+            RadioButtonFeederDuplex.Location = new Point(15, 59);
+            RadioButtonFeederDuplex.Name = "RadioButtonFeederDuplex";
+            RadioButtonFeederDuplex.Size = new Size(100, 19);
+            RadioButtonFeederDuplex.TabIndex = 24;
+            RadioButtonFeederDuplex.TabStop = true;
+            RadioButtonFeederDuplex.Text = "Feeder Duplex";
+            RadioButtonFeederDuplex.UseVisualStyleBackColor = true;
+            // 
+            // LabelDpi
+            // 
+            LabelDpi.AutoSize = true;
+            LabelDpi.Location = new Point(320, 25);
+            LabelDpi.Name = "LabelDpi";
+            LabelDpi.Size = new Size(25, 15);
+            LabelDpi.TabIndex = 23;
+            LabelDpi.Text = "DPI";
+            // 
+            // ComboBoxDpi
+            // 
+            ComboBoxDpi.DropDownStyle = ComboBoxStyle.DropDownList;
+            ComboBoxDpi.FormattingEnabled = true;
+            ComboBoxDpi.Items.AddRange(new object[] { "150", "300", "600", "1200" });
+            ComboBoxDpi.Location = new Point(261, 20);
+            ComboBoxDpi.Name = "ComboBoxDpi";
+            ComboBoxDpi.Size = new Size(54, 23);
+            ComboBoxDpi.TabIndex = 22;
             // 
             // chkExcludeBlankPages
             // 
             chkExcludeBlankPages.AutoSize = true;
             chkExcludeBlankPages.Checked = true;
             chkExcludeBlankPages.CheckState = CheckState.Checked;
-            chkExcludeBlankPages.Location = new Point(115, 24);
+            chkExcludeBlankPages.Location = new Point(122, 24);
             chkExcludeBlankPages.Name = "chkExcludeBlankPages";
             chkExcludeBlankPages.Size = new Size(133, 19);
             chkExcludeBlankPages.TabIndex = 1;
@@ -181,8 +234,6 @@
             // 
             // grpDocumentOptions
             // 
-            grpDocumentOptions.Controls.Add(LabelDpi);
-            grpDocumentOptions.Controls.Add(ComboBoxDpi);
             grpDocumentOptions.Controls.Add(radioDocumentCombined);
             grpDocumentOptions.Controls.Add(radioDocumentIndividual);
             grpDocumentOptions.Location = new Point(16, 166);
@@ -191,25 +242,6 @@
             grpDocumentOptions.TabIndex = 19;
             grpDocumentOptions.TabStop = false;
             grpDocumentOptions.Text = "Document Options";
-            // 
-            // LabelDpi
-            // 
-            LabelDpi.AutoSize = true;
-            LabelDpi.Location = new Point(274, 22);
-            LabelDpi.Name = "LabelDpi";
-            LabelDpi.Size = new Size(25, 15);
-            LabelDpi.TabIndex = 21;
-            LabelDpi.Text = "DPI";
-            // 
-            // ComboBoxDpi
-            // 
-            ComboBoxDpi.DropDownStyle = ComboBoxStyle.DropDownList;
-            ComboBoxDpi.FormattingEnabled = true;
-            ComboBoxDpi.Items.AddRange(new object[] { "150", "300", "600", "1200" });
-            ComboBoxDpi.Location = new Point(215, 17);
-            ComboBoxDpi.Name = "ComboBoxDpi";
-            ComboBoxDpi.Size = new Size(54, 23);
-            ComboBoxDpi.TabIndex = 20;
             // 
             // radioDocumentCombined
             // 
@@ -280,30 +312,20 @@
             // lstScanners
             // 
             lstScanners.FormattingEnabled = true;
-            lstScanners.Location = new Point(16, 298);
+            lstScanners.Location = new Point(16, 371);
             lstScanners.Name = "lstScanners";
             lstScanners.Size = new Size(349, 79);
             lstScanners.TabIndex = 17;
             // 
             // btnGetScannerList
             // 
-            btnGetScannerList.Location = new Point(16, 383);
+            btnGetScannerList.Location = new Point(16, 456);
             btnGetScannerList.Name = "btnGetScannerList";
             btnGetScannerList.Size = new Size(114, 22);
             btnGetScannerList.TabIndex = 16;
             btnGetScannerList.Text = "Get Scanner List";
             btnGetScannerList.UseVisualStyleBackColor = true;
             btnGetScannerList.Click += ButtonGetScannerList_Click;
-            // 
-            // buttonLoad
-            // 
-            buttonLoad.Location = new Point(178, 572);
-            buttonLoad.Name = "buttonLoad";
-            buttonLoad.Size = new Size(116, 23);
-            buttonLoad.TabIndex = 11;
-            buttonLoad.Text = "Load Images";
-            buttonLoad.UseVisualStyleBackColor = true;
-            buttonLoad.Click += ButtonLoad_Click;
             // 
             // scanButton
             // 
@@ -336,28 +358,6 @@
             buttonOutputFolder.UseVisualStyleBackColor = true;
             buttonOutputFolder.Click += ButtonOutputFolder_Click;
             // 
-            // buttonNext
-            // 
-            buttonNext.Anchor = AnchorStyles.Bottom;
-            buttonNext.Location = new Point(259, 601);
-            buttonNext.Name = "buttonNext";
-            buttonNext.Size = new Size(75, 24);
-            buttonNext.TabIndex = 7;
-            buttonNext.Text = "Next";
-            buttonNext.UseVisualStyleBackColor = true;
-            buttonNext.Click += ButtonNext_Click;
-            // 
-            // buttonPrevious
-            // 
-            buttonPrevious.Anchor = AnchorStyles.Bottom;
-            buttonPrevious.Location = new Point(178, 601);
-            buttonPrevious.Name = "buttonPrevious";
-            buttonPrevious.Size = new Size(75, 24);
-            buttonPrevious.TabIndex = 6;
-            buttonPrevious.Text = "Previous";
-            buttonPrevious.UseVisualStyleBackColor = true;
-            buttonPrevious.Click += ButtonPrevious_Click;
-            // 
             // FormScan
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -388,12 +388,9 @@
         private FolderBrowserDialog folderBrowserDialog1;
         private ImageList imageList1;
         private GroupBox groupScanControls;
-        private Button buttonLoad;
         private Button scanButton;
         private Label LabelOutputFolder;
         private Button buttonOutputFolder;
-        private Button buttonNext;
-        private Button buttonPrevious;
         private Button btnGetScannerList;
         private ListBox lstScanners;
         private GroupBox grpColorMode;
@@ -410,7 +407,10 @@
         private TextBox TextBoxBaseFilename;
         private Label LabelStatusLabel;
         private Label LabelStatus;
-        private ComboBox ComboBoxDpi;
         private Label LabelDpi;
+        private ComboBox ComboBoxDpi;
+        private RadioButton RadioButtonFeederDuplex;
+        private RadioButton RadioButtonFlatbed;
+        private RadioButton RadioButtonFeederSimplex;
     }
 }

@@ -2,6 +2,7 @@
 using NAPS2.Images.Gdi;
 using NAPS2.Pdf;
 using NAPS2.Scan;
+using System.Runtime.CompilerServices;
 
 namespace ScanUtility;
 
@@ -35,7 +36,7 @@ public class DocumentScanner : IDisposable // Consider IDisposable
 
         try
         {
-            (processedImages, var fileList) = await PerformScanning(options, configuration.OutputFolder);
+            (processedImages, imageFiles) = await PerformScanning(options, configuration.OutputFolder);
 
             if (processedImages.Count > 0) // Only export if there are images
             {
@@ -44,7 +45,7 @@ public class DocumentScanner : IDisposable // Consider IDisposable
         }
         finally
         {
-            CleanUpImageFiles(imageFiles);
+            CleanUpImageFiles(imageFiles, configuration.OutputFolder);
             DisposeImages(processedImages); // Dispose images after exporting to PDF
         }
     }
@@ -96,15 +97,16 @@ public class DocumentScanner : IDisposable // Consider IDisposable
 
     }
 
-    private static void CleanUpImageFiles(IList<string> imageFiles)
+    private static void CleanUpImageFiles(IList<string> imageFiles, string folder)
     {
         foreach (var file in imageFiles)
         {
             try
             {
-                if (File.Exists(file))
+                var filePath = Path.Combine(folder, file);
+                if (File.Exists(filePath))
                 {
-                    File.Delete(file);
+                    File.Delete(filePath);
                 }
             }
             catch (IOException ex)

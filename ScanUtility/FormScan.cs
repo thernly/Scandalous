@@ -6,9 +6,7 @@ namespace ScanUtility;
 public partial class FormScan : Form
 {
     private readonly DocumentScanner scanner;
-    private int _currentImageNumber = 0;
     private readonly List<string> _imageFileList;
-    //private List<ScanDevice>? _devices;
 
     public FormScan()
     {
@@ -29,55 +27,61 @@ public partial class FormScan : Form
         }
         var colorMode = GetScannerColorMode();
         var dpi = int.Parse(ComboBoxDpi.Text);
+        var scannerPaperSource = GetScannerPaperSource();
 
         ScanConfiguration scanConfiguration;
         try
         {
             scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, colorMode,
                                                           documentOptions, chkAutoDeskew.Checked, chkExcludeBlankPages.Checked, dpi,
-                                                          ScannerPaperSource.FeederDuplex);
-        }
-        catch (ArgumentException ex)
-        {
-            MessageBox.Show($"{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            LabelStatus.Text = $"{ex.Message}";
-            Cursor = Cursors.Default;
-            return;
+                                                          scannerPaperSource);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            LabelStatus.Text = $"An error occurred: {ex.Message}";
+            ShowExceptionMessage($"An error occurred: {ex.Message}");
             Cursor = Cursors.Default;
             return;
         }
-        _imageFileList.Clear();
+                
         try
         {
+            _imageFileList.Clear();
+            pictureBox1.Image = null;
             LabelStatus.Text = "Scanning...";
             await scanner.ScanDocuments(scanConfiguration);
             LabelStatus.Text = "Scanning completed.";
         }
         catch (DeviceFeederEmptyException)
         {
-            MessageBox.Show("The device feeder is empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            LabelStatus.Text = "The device feeder is empty.";
+            ShowExceptionMessage("The device feeder is empty.");
         }
         catch (ScanDriverUnknownException)
         {
-            MessageBox.Show($"Scan Driver Unknown Exception", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            LabelStatus.Text = "Scan Driver Unknown.";
+            ShowExceptionMessage("The scan driver is unknown. Please check the scanner connection and drivers.");
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            LabelStatus.Text = $"An error occurred: {ex.Message}";
+            ShowExceptionMessage($"An error occurred: {ex.Message}");
         }
         finally
         {
             Cursor = Cursors.Default;
         }
         ShowPDF(scanConfiguration);
+    }
+
+    private void ShowExceptionMessage(string message)
+    {
+        MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        LabelStatus.Text = message;
+    }
+
+    private ScannerPaperSource GetScannerPaperSource()
+    {
+        if (RadioButtonFeederDuplex.Checked) return ScannerPaperSource.FeederDuplex;
+        if (RadioButtonFeederSimplex.Checked) return ScannerPaperSource.FeederSimplex;
+        if (RadioButtonFlatbed.Checked) return ScannerPaperSource.Flatbed;
+        return ScannerPaperSource.Auto;
     }
 
     private void ButtonOutputFolder_Click(object sender, EventArgs e)
@@ -98,47 +102,6 @@ public partial class FormScan : Form
         pictureBox1.Image = image;
         pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
         pictureBox1.Refresh();
-    }
-
-    private void ButtonPrevious_Click(object sender, EventArgs e)
-    {
-        var count = _imageFileList.Count;
-        if (count > 0)
-        {
-            _currentImageNumber--;
-            if (_currentImageNumber < 0)
-            {
-                _currentImageNumber = count - 1;
-            }
-            pictureBox1.Image = Image.FromFile(_imageFileList[_currentImageNumber]);
-        }
-
-    }
-
-    private void ButtonNext_Click(object sender, EventArgs e)
-    {
-        var count = _imageFileList.Count;
-        if (count > 0)
-        {
-            _currentImageNumber++;
-            if (_currentImageNumber > count - 1)
-            {
-                _currentImageNumber = 0;
-            }
-            pictureBox1.Image = Image.FromFile(_imageFileList[_currentImageNumber]);
-        }
-
-    }
-
-    private void ButtonLoad_Click(object sender, EventArgs e)
-    {
-        Cursor = Cursors.WaitCursor;
-        try
-        {
-            _imageFileList.AddRange(Directory.GetFiles(LabelOutputFolder.Text, "*.png"));
-            pictureBox1.Image = Image.FromFile(_imageFileList[0]);
-        }
-        finally { Cursor = Cursors.Default; }
     }
 
     private ScannerColorMode GetScannerColorMode()
@@ -194,6 +157,9 @@ public partial class FormScan : Form
         radioButtonGrayscale.Checked = scanConfiguration.ColorMode == ScannerColorMode.Grayscale;
         radioButtonBlackWhite.Checked = scanConfiguration.ColorMode == ScannerColorMode.BlackAndWhite;
         radioButtonColor.Checked = scanConfiguration.ColorMode == ScannerColorMode.Color;
+        RadioButtonFeederDuplex.Checked = scanConfiguration.ScannerPaperSource == ScannerPaperSource.FeederDuplex;
+        RadioButtonFeederSimplex.Checked = scanConfiguration.ScannerPaperSource == ScannerPaperSource.FeederSimplex;
+        RadioButtonFlatbed.Checked = scanConfiguration.ScannerPaperSource == ScannerPaperSource.Flatbed;
         ComboBoxDpi.Text = scanConfiguration.ScanResolutionDPI.ToString();
     }
 
@@ -207,9 +173,10 @@ public partial class FormScan : Form
     private async void FormScan_Closing(object sender, FormClosingEventArgs e)
     {
         var configManager = new ConfigurationManager();
+        var scannerPaperSource = GetScannerPaperSource();
         var scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, GetScannerColorMode(),
             radioDocumentCombined.Checked ? DocumentOptions.Combined : DocumentOptions.Individual, chkAutoDeskew.Checked,
-            chkExcludeBlankPages.Checked, int.Parse(ComboBoxDpi.Text), ScannerPaperSource.FeederDuplex);
+            chkExcludeBlankPages.Checked, int.Parse(ComboBoxDpi.Text), scannerPaperSource);
         await configManager.SaveConfigurationAsync(scanConfiguration);
     }
 }
