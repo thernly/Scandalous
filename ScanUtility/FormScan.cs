@@ -1,13 +1,16 @@
+using NAPS2.Scan;
 using NAPS2.Scan.Exceptions;
+using System.Drawing.Imaging;
 
 
 namespace ScanUtility;
 
 public partial class FormScan : Form
 {
-    private DocumentScanner scanner;
+    private readonly DocumentScanner scanner;
     private int _currentImageNumber = 0;
     private readonly List<string> _imageFileList;
+    //private List<ScanDevice>? _devices;
 
     public FormScan()
     {
@@ -17,36 +20,73 @@ public partial class FormScan : Form
         _imageFileList = new List<string>();
     }
 
-    private async void scanButton_ClickAsync(object sender, EventArgs e)
+    private async void ScanButton_ClickAsync(object sender, EventArgs e)
     {
         Cursor = Cursors.WaitCursor;
-
+        LabelStatus.Text = "Building configuration...";
+        var documentOptions = DocumentOptions.Individual;
+        if (radioDocumentCombined.Checked)
+        {
+            documentOptions = DocumentOptions.Combined;
+        }
+        ScanConfiguration scanConfiguration;
+        var colorMode = GetScannerColorMode();
+        try
+        { 
+        scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, colorMode,
+                                                      documentOptions, chkAutoDeskew.Checked, chkExcludeBlankPages.Checked, 300,
+                                                      ScannerPaperSource.FeederDuplex);
+        }
+        catch (ArgumentException ex)
+        {
+            MessageBox.Show($"{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            LabelStatus.Text = $"{ex.Message}";
+            Cursor = Cursors.Default;
+            return;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            LabelStatus.Text = $"An error occurred: {ex.Message}";
+            Cursor = Cursors.Default;
+            return;
+        }
         _imageFileList.Clear();
         try
         {
-            await scanner.ScanDocumentsFromFeeder(label1.Text, GetScannerColorMode());
+            LabelStatus.Text = "Scanning...";
+            await scanner.ScanDocumentsFromFeeder(scanConfiguration);
+            LabelStatus.Text = "Scanning completed.";
         }
         catch (DeviceFeederEmptyException)
         {
-            MessageBox.Show("The device feeder is empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show("The device feeder is empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            LabelStatus.Text = "The device feeder is empty.";
         }
         catch (ScanDriverUnknownException)
         {
             MessageBox.Show($"Scan Driver Unknown Exception", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            LabelStatus.Text = "Scan Driver Unknown.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            LabelStatus.Text = $"An error occurred: {ex.Message}";
         }
         finally
         {
             Cursor = Cursors.Default;
         }
+        ShowPDF(scanConfiguration);
     }
 
-    private void buttonOutputFolder_Click(object sender, EventArgs e)
+    private void ButtonOutputFolder_Click(object sender, EventArgs e)
     {
-        folderBrowserDialog1.SelectedPath = label1.Text;
+        folderBrowserDialog1.SelectedPath = LabelOutputFolder.Text;
         var result = folderBrowserDialog1.ShowDialog();
         if (result == DialogResult.OK)
         {
-            label1.Text = folderBrowserDialog1.SelectedPath;
+            LabelOutputFolder.Text = folderBrowserDialog1.SelectedPath;
         }
     }
 
@@ -60,7 +100,7 @@ public partial class FormScan : Form
         pictureBox1.Refresh();
     }
 
-    private void buttonPrevious_Click(object sender, EventArgs e)
+    private void ButtonPrevious_Click(object sender, EventArgs e)
     {
         var count = _imageFileList.Count;
         if (count > 0)
@@ -75,7 +115,7 @@ public partial class FormScan : Form
 
     }
 
-    private void buttonNext_Click(object sender, EventArgs e)
+    private void ButtonNext_Click(object sender, EventArgs e)
     {
         var count = _imageFileList.Count;
         if (count > 0)
@@ -90,12 +130,12 @@ public partial class FormScan : Form
 
     }
 
-    private void buttonLoad_Click(object sender, EventArgs e)
+    private void ButtonLoad_Click(object sender, EventArgs e)
     {
         Cursor = Cursors.WaitCursor;
         try
         {
-            _imageFileList.AddRange(Directory.GetFiles(label1.Text, "*.png"));
+            _imageFileList.AddRange(Directory.GetFiles(LabelOutputFolder.Text, "*.png"));
             pictureBox1.Image = Image.FromFile(_imageFileList[0]);
         }
         finally { Cursor = Cursors.Default; }
@@ -108,5 +148,37 @@ public partial class FormScan : Form
         if (radioButtonColor.Checked) { return ScannerColorMode.Color; }
         return ScannerColorMode.Grayscale;
     }
-    
+
+    private async void ButtonGetScannerList_Click(object sender, EventArgs e)
+    {
+        var devices = await scanner.GetScanDevicesAsync();
+        foreach (var device in devices)
+        {
+            lstScanners.Items.Add(device.Name);
+        }
+
+    }
+
+    private void ShowPDF(ScanConfiguration scanConfiguration)
+    {
+        if (scanConfiguration.DocumentOptions == DocumentOptions.Combined)
+        {
+            
+            var pdfFilePath = Path.Combine(scanConfiguration.OutputFolder, $"{scanConfiguration.OutputBaseFileName}.pdf");
+            try
+            {                 
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = pdfFilePath,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
+            }
+            catch (Exception ex)
+            {
+                LabelStatus.Text = $"There was an error opening the PDF in a browser: {ex.Message}";
+            }
+        }
+    }
+
 }

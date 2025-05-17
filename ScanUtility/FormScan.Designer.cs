@@ -33,18 +33,33 @@
             folderBrowserDialog1 = new FolderBrowserDialog();
             imageList1 = new ImageList(components);
             groupScanControls = new GroupBox();
+            LabelStatus = new Label();
+            LabelStatusLabel = new Label();
+            TextBoxBaseFilename = new TextBox();
+            LabelBaseFilename = new Label();
+            groupBox1 = new GroupBox();
+            chkExcludeBlankPages = new CheckBox();
+            chkAutoDeskew = new CheckBox();
+            grpDocumentOptions = new GroupBox();
+            radioDocumentCombined = new RadioButton();
+            radioDocumentIndividual = new RadioButton();
+            grpColorMode = new GroupBox();
             radioButtonColor = new RadioButton();
             radioButtonBlackWhite = new RadioButton();
             radioButtonGrayscale = new RadioButton();
-            LabelMode = new Label();
+            lstScanners = new ListBox();
+            btnGetScannerList = new Button();
             buttonLoad = new Button();
             scanButton = new Button();
-            label1 = new Label();
+            LabelOutputFolder = new Label();
             buttonOutputFolder = new Button();
             buttonNext = new Button();
             buttonPrevious = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             groupScanControls.SuspendLayout();
+            groupBox1.SuspendLayout();
+            grpDocumentOptions.SuspendLayout();
+            grpColorMode.SuspendLayout();
             SuspendLayout();
             // 
             // pictureBox1
@@ -66,13 +81,18 @@
             // 
             // groupScanControls
             // 
-            groupScanControls.Controls.Add(radioButtonColor);
-            groupScanControls.Controls.Add(radioButtonBlackWhite);
-            groupScanControls.Controls.Add(radioButtonGrayscale);
-            groupScanControls.Controls.Add(LabelMode);
+            groupScanControls.Controls.Add(LabelStatus);
+            groupScanControls.Controls.Add(LabelStatusLabel);
+            groupScanControls.Controls.Add(TextBoxBaseFilename);
+            groupScanControls.Controls.Add(LabelBaseFilename);
+            groupScanControls.Controls.Add(groupBox1);
+            groupScanControls.Controls.Add(grpDocumentOptions);
+            groupScanControls.Controls.Add(grpColorMode);
+            groupScanControls.Controls.Add(lstScanners);
+            groupScanControls.Controls.Add(btnGetScannerList);
             groupScanControls.Controls.Add(buttonLoad);
             groupScanControls.Controls.Add(scanButton);
-            groupScanControls.Controls.Add(label1);
+            groupScanControls.Controls.Add(LabelOutputFolder);
             groupScanControls.Controls.Add(buttonOutputFolder);
             groupScanControls.Controls.Add(buttonNext);
             groupScanControls.Controls.Add(buttonPrevious);
@@ -83,23 +103,141 @@
             groupScanControls.TabIndex = 11;
             groupScanControls.TabStop = false;
             // 
+            // LabelStatus
+            // 
+            LabelStatus.AutoSize = true;
+            LabelStatus.BorderStyle = BorderStyle.FixedSingle;
+            LabelStatus.Location = new Point(22, 442);
+            LabelStatus.MaximumSize = new Size(340, 86);
+            LabelStatus.MinimumSize = new Size(340, 52);
+            LabelStatus.Name = "LabelStatus";
+            LabelStatus.Size = new Size(340, 52);
+            LabelStatus.TabIndex = 24;
+            LabelStatus.Text = "Not Started";
+            // 
+            // LabelStatusLabel
+            // 
+            LabelStatusLabel.AutoSize = true;
+            LabelStatusLabel.Location = new Point(19, 421);
+            LabelStatusLabel.Name = "LabelStatusLabel";
+            LabelStatusLabel.Size = new Size(39, 15);
+            LabelStatusLabel.TabIndex = 23;
+            LabelStatusLabel.Text = "Status";
+            // 
+            // TextBoxBaseFilename
+            // 
+            TextBoxBaseFilename.Location = new Point(113, 55);
+            TextBoxBaseFilename.MaxLength = 200;
+            TextBoxBaseFilename.Name = "TextBoxBaseFilename";
+            TextBoxBaseFilename.Size = new Size(252, 23);
+            TextBoxBaseFilename.TabIndex = 22;
+            // 
+            // LabelBaseFilename
+            // 
+            LabelBaseFilename.AutoSize = true;
+            LabelBaseFilename.Location = new Point(11, 57);
+            LabelBaseFilename.Name = "LabelBaseFilename";
+            LabelBaseFilename.Size = new Size(82, 15);
+            LabelBaseFilename.TabIndex = 21;
+            LabelBaseFilename.Text = "Base Filename";
+            // 
+            // groupBox1
+            // 
+            groupBox1.Controls.Add(chkExcludeBlankPages);
+            groupBox1.Controls.Add(chkAutoDeskew);
+            groupBox1.Location = new Point(16, 229);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new Size(349, 57);
+            groupBox1.TabIndex = 20;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Scan Options";
+            // 
+            // chkExcludeBlankPages
+            // 
+            chkExcludeBlankPages.AutoSize = true;
+            chkExcludeBlankPages.Checked = true;
+            chkExcludeBlankPages.CheckState = CheckState.Checked;
+            chkExcludeBlankPages.Location = new Point(115, 24);
+            chkExcludeBlankPages.Name = "chkExcludeBlankPages";
+            chkExcludeBlankPages.Size = new Size(133, 19);
+            chkExcludeBlankPages.TabIndex = 1;
+            chkExcludeBlankPages.Text = "Exclude Blank Pages";
+            chkExcludeBlankPages.UseVisualStyleBackColor = true;
+            // 
+            // chkAutoDeskew
+            // 
+            chkAutoDeskew.AutoSize = true;
+            chkAutoDeskew.Checked = true;
+            chkAutoDeskew.CheckState = CheckState.Checked;
+            chkAutoDeskew.Location = new Point(14, 24);
+            chkAutoDeskew.Name = "chkAutoDeskew";
+            chkAutoDeskew.Size = new Size(100, 19);
+            chkAutoDeskew.TabIndex = 0;
+            chkAutoDeskew.Text = "Auto De-skew";
+            chkAutoDeskew.UseVisualStyleBackColor = true;
+            // 
+            // grpDocumentOptions
+            // 
+            grpDocumentOptions.Controls.Add(radioDocumentCombined);
+            grpDocumentOptions.Controls.Add(radioDocumentIndividual);
+            grpDocumentOptions.Location = new Point(16, 166);
+            grpDocumentOptions.Name = "grpDocumentOptions";
+            grpDocumentOptions.Size = new Size(349, 57);
+            grpDocumentOptions.TabIndex = 19;
+            grpDocumentOptions.TabStop = false;
+            grpDocumentOptions.Text = "Document Options";
+            // 
+            // radioDocumentCombined
+            // 
+            radioDocumentCombined.AutoSize = true;
+            radioDocumentCombined.Checked = true;
+            radioDocumentCombined.Location = new Point(14, 19);
+            radioDocumentCombined.Name = "radioDocumentCombined";
+            radioDocumentCombined.Size = new Size(81, 19);
+            radioDocumentCombined.TabIndex = 19;
+            radioDocumentCombined.TabStop = true;
+            radioDocumentCombined.Text = "Combined";
+            radioDocumentCombined.UseVisualStyleBackColor = true;
+            // 
+            // radioDocumentIndividual
+            // 
+            radioDocumentIndividual.AutoSize = true;
+            radioDocumentIndividual.Location = new Point(115, 19);
+            radioDocumentIndividual.Name = "radioDocumentIndividual";
+            radioDocumentIndividual.Size = new Size(77, 19);
+            radioDocumentIndividual.TabIndex = 18;
+            radioDocumentIndividual.Text = "Individual";
+            radioDocumentIndividual.UseVisualStyleBackColor = true;
+            // 
+            // grpColorMode
+            // 
+            grpColorMode.Controls.Add(radioButtonColor);
+            grpColorMode.Controls.Add(radioButtonBlackWhite);
+            grpColorMode.Controls.Add(radioButtonGrayscale);
+            grpColorMode.Location = new Point(16, 103);
+            grpColorMode.Name = "grpColorMode";
+            grpColorMode.Size = new Size(349, 57);
+            grpColorMode.TabIndex = 18;
+            grpColorMode.TabStop = false;
+            grpColorMode.Text = "Color Mode";
+            // 
             // radioButtonColor
             // 
             radioButtonColor.AutoSize = true;
-            radioButtonColor.Location = new Point(244, 56);
+            radioButtonColor.Location = new Point(236, 24);
             radioButtonColor.Name = "radioButtonColor";
             radioButtonColor.Size = new Size(54, 19);
-            radioButtonColor.TabIndex = 15;
+            radioButtonColor.TabIndex = 18;
             radioButtonColor.Text = "Color";
             radioButtonColor.UseVisualStyleBackColor = true;
             // 
             // radioButtonBlackWhite
             // 
             radioButtonBlackWhite.AutoSize = true;
-            radioButtonBlackWhite.Location = new Point(138, 56);
+            radioButtonBlackWhite.Location = new Point(115, 24);
             radioButtonBlackWhite.Name = "radioButtonBlackWhite";
             radioButtonBlackWhite.Size = new Size(100, 19);
-            radioButtonBlackWhite.TabIndex = 14;
+            radioButtonBlackWhite.TabIndex = 17;
             radioButtonBlackWhite.Text = "Black && White";
             radioButtonBlackWhite.UseVisualStyleBackColor = true;
             // 
@@ -107,53 +245,62 @@
             // 
             radioButtonGrayscale.AutoSize = true;
             radioButtonGrayscale.Checked = true;
-            radioButtonGrayscale.Location = new Point(57, 56);
+            radioButtonGrayscale.Location = new Point(14, 24);
             radioButtonGrayscale.Name = "radioButtonGrayscale";
             radioButtonGrayscale.Size = new Size(75, 19);
-            radioButtonGrayscale.TabIndex = 13;
+            radioButtonGrayscale.TabIndex = 16;
             radioButtonGrayscale.TabStop = true;
             radioButtonGrayscale.Text = "Grayscale";
             radioButtonGrayscale.UseVisualStyleBackColor = true;
             // 
-            // LabelMode
+            // lstScanners
             // 
-            LabelMode.AutoSize = true;
-            LabelMode.Location = new Point(6, 58);
-            LabelMode.Name = "LabelMode";
-            LabelMode.Size = new Size(38, 15);
-            LabelMode.TabIndex = 12;
-            LabelMode.Text = "Mode";
+            lstScanners.FormattingEnabled = true;
+            lstScanners.Location = new Point(16, 298);
+            lstScanners.Name = "lstScanners";
+            lstScanners.Size = new Size(349, 79);
+            lstScanners.TabIndex = 17;
+            // 
+            // btnGetScannerList
+            // 
+            btnGetScannerList.Location = new Point(16, 383);
+            btnGetScannerList.Name = "btnGetScannerList";
+            btnGetScannerList.Size = new Size(114, 22);
+            btnGetScannerList.TabIndex = 16;
+            btnGetScannerList.Text = "Get Scanner List";
+            btnGetScannerList.UseVisualStyleBackColor = true;
+            btnGetScannerList.Click += ButtonGetScannerList_Click;
             // 
             // buttonLoad
             // 
-            buttonLoad.Location = new Point(16, 155);
+            buttonLoad.Location = new Point(178, 572);
             buttonLoad.Name = "buttonLoad";
             buttonLoad.Size = new Size(116, 23);
             buttonLoad.TabIndex = 11;
             buttonLoad.Text = "Load Images";
             buttonLoad.UseVisualStyleBackColor = true;
-            buttonLoad.Click += this.buttonLoad_Click;
+            buttonLoad.Click += ButtonLoad_Click;
             // 
             // scanButton
             // 
-            scanButton.Location = new Point(16, 109);
+            scanButton.Location = new Point(16, 601);
             scanButton.Name = "scanButton";
             scanButton.Size = new Size(75, 23);
             scanButton.TabIndex = 10;
             scanButton.Text = "Scan";
             scanButton.UseVisualStyleBackColor = true;
-            scanButton.Click += this.scanButton_ClickAsync;
+            scanButton.Click += ScanButton_ClickAsync;
             // 
-            // label1
+            // LabelOutputFolder
             // 
-            label1.AutoSize = true;
-            label1.BorderStyle = BorderStyle.FixedSingle;
-            label1.Location = new Point(115, 30);
-            label1.MinimumSize = new Size(200, 0);
-            label1.Name = "label1";
-            label1.Size = new Size(200, 17);
-            label1.TabIndex = 9;
-            label1.Text = "c:\\test";
+            LabelOutputFolder.AutoSize = true;
+            LabelOutputFolder.BorderStyle = BorderStyle.FixedSingle;
+            LabelOutputFolder.Location = new Point(115, 30);
+            LabelOutputFolder.MinimumSize = new Size(250, 0);
+            LabelOutputFolder.Name = "LabelOutputFolder";
+            LabelOutputFolder.Size = new Size(250, 17);
+            LabelOutputFolder.TabIndex = 9;
+            LabelOutputFolder.Text = "c:\\test";
             // 
             // buttonOutputFolder
             // 
@@ -163,7 +310,7 @@
             buttonOutputFolder.TabIndex = 8;
             buttonOutputFolder.Text = "Output Folder";
             buttonOutputFolder.UseVisualStyleBackColor = true;
-            buttonOutputFolder.Click += this.buttonOutputFolder_Click;
+            buttonOutputFolder.Click += ButtonOutputFolder_Click;
             // 
             // buttonNext
             // 
@@ -174,7 +321,7 @@
             buttonNext.TabIndex = 7;
             buttonNext.Text = "Next";
             buttonNext.UseVisualStyleBackColor = true;
-            buttonNext.Click += this.buttonNext_Click;
+            buttonNext.Click += ButtonNext_Click;
             // 
             // buttonPrevious
             // 
@@ -185,7 +332,7 @@
             buttonPrevious.TabIndex = 6;
             buttonPrevious.Text = "Previous";
             buttonPrevious.UseVisualStyleBackColor = true;
-            buttonPrevious.Click += this.buttonPrevious_Click;
+            buttonPrevious.Click += ButtonPrevious_Click;
             // 
             // FormScan
             // 
@@ -199,6 +346,12 @@
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             groupScanControls.ResumeLayout(false);
             groupScanControls.PerformLayout();
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
+            grpDocumentOptions.ResumeLayout(false);
+            grpDocumentOptions.PerformLayout();
+            grpColorMode.ResumeLayout(false);
+            grpColorMode.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -208,15 +361,27 @@
         private FolderBrowserDialog folderBrowserDialog1;
         private ImageList imageList1;
         private GroupBox groupScanControls;
-        private RadioButton radioButtonColor;
-        private RadioButton radioButtonBlackWhite;
-        private RadioButton radioButtonGrayscale;
-        private Label LabelMode;
         private Button buttonLoad;
         private Button scanButton;
-        private Label label1;
+        private Label LabelOutputFolder;
         private Button buttonOutputFolder;
         private Button buttonNext;
         private Button buttonPrevious;
+        private Button btnGetScannerList;
+        private ListBox lstScanners;
+        private GroupBox grpColorMode;
+        private RadioButton radioButtonColor;
+        private RadioButton radioButtonBlackWhite;
+        private RadioButton radioButtonGrayscale;
+        private GroupBox grpDocumentOptions;
+        private RadioButton radioDocumentCombined;
+        private RadioButton radioDocumentIndividual;
+        private GroupBox groupBox1;
+        private CheckBox chkExcludeBlankPages;
+        private CheckBox chkAutoDeskew;
+        private Label LabelBaseFilename;
+        private TextBox TextBoxBaseFilename;
+        private Label LabelStatusLabel;
+        private Label LabelStatus;
     }
 }
