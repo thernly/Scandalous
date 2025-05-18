@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormScan));
             pictureBox1 = new PictureBox();
             folderBrowserDialog1 = new FolderBrowserDialog();
             imageList1 = new ImageList(components);
@@ -365,8 +366,9 @@
             ClientSize = new Size(1013, 643);
             Controls.Add(groupScanControls);
             Controls.Add(pictureBox1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "FormScan";
-            Text = "ScanUtility";
+            Text = "Scandalous";
             FormClosing += FormScan_Closing;
             Load += FormScan_Load;
             Shown += FormScan_Shown;
