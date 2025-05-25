@@ -29,12 +29,13 @@ public partial class FormScan : Form
         var dpi = int.Parse(ComboBoxDpi.Text);
         var scannerPaperSource = GetScannerPaperSource();
 
+
         ScanConfiguration scanConfiguration;
         try
         {
             scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, colorMode,
                                                           documentOptions, chkAutoDeskew.Checked, chkExcludeBlankPages.Checked, dpi,
-                                                          scannerPaperSource);
+                                                          scannerPaperSource, checkBoxOcr.Checked, labelTessdataFolder.Text);
         }
         catch (Exception ex)
         {
@@ -42,7 +43,7 @@ public partial class FormScan : Form
             Cursor = Cursors.Default;
             return;
         }
-                
+
         try
         {
             _imageFileList.Clear();
@@ -86,11 +87,11 @@ public partial class FormScan : Form
 
     private void ButtonOutputFolder_Click(object sender, EventArgs e)
     {
-        folderBrowserDialog1.SelectedPath = LabelOutputFolder.Text;
-        var result = folderBrowserDialog1.ShowDialog();
+        folderBrowserDialogOutputFolder.SelectedPath = LabelOutputFolder.Text;
+        var result = folderBrowserDialogOutputFolder.ShowDialog();
         if (result == DialogResult.OK)
         {
-            LabelOutputFolder.Text = folderBrowserDialog1.SelectedPath;
+            LabelOutputFolder.Text = folderBrowserDialogOutputFolder.SelectedPath;
         }
     }
 
@@ -161,6 +162,8 @@ public partial class FormScan : Form
         RadioButtonFeederSimplex.Checked = scanConfiguration.ScannerPaperSource == ScannerPaperSource.FeederSimplex;
         RadioButtonFlatbed.Checked = scanConfiguration.ScannerPaperSource == ScannerPaperSource.Flatbed;
         ComboBoxDpi.Text = scanConfiguration.ScanResolutionDPI.ToString();
+        checkBoxOcr.Checked = scanConfiguration.OcrEnabled;
+        labelTessdataFolder.Text = scanConfiguration.TessdataFolder;
     }
 
     private void FormScan_Shown(object sender, EventArgs e)
@@ -176,7 +179,18 @@ public partial class FormScan : Form
         var scannerPaperSource = GetScannerPaperSource();
         var scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, GetScannerColorMode(),
             radioDocumentCombined.Checked ? DocumentOptions.Combined : DocumentOptions.Individual, chkAutoDeskew.Checked,
-            chkExcludeBlankPages.Checked, int.Parse(ComboBoxDpi.Text), scannerPaperSource);
+            chkExcludeBlankPages.Checked, int.Parse(ComboBoxDpi.Text), scannerPaperSource, checkBoxOcr.Checked, labelTessdataFolder.Text);
         await configManager.SaveConfigurationAsync(scanConfiguration);
+    }
+
+    private void ButtonTesseractDataPath_Click(object sender, EventArgs e)
+    {
+        folderBrowserDialogTessdataFolder.SelectedPath = labelTessdataFolder.Text;
+        var result = folderBrowserDialogTessdataFolder.ShowDialog();
+        if (result == DialogResult.OK)
+        {
+            labelTessdataFolder.Text = folderBrowserDialogTessdataFolder.SelectedPath;
+        }
+
     }
 }

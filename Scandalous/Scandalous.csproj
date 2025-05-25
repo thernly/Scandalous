@@ -33,6 +33,7 @@
   <ItemGroup>
     <PackageReference Include="NAPS2.Images.Gdi" Version="1.1.6" />
     <PackageReference Include="NAPS2.Sdk" Version="1.1.6" />
+    <PackageReference Include="NAPS2.Tesseract.Binaries" Version="1.3.2" />
   </ItemGroup>
 
 </Project>

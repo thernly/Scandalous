@@ -1,5 +1,6 @@
 ﻿using NAPS2.Images;
 using NAPS2.Images.Gdi;
+using NAPS2.Ocr;
 using NAPS2.Pdf;
 using NAPS2.Scan;
 using System.Runtime.CompilerServices;
@@ -78,11 +79,15 @@ public class DocumentScanner : IDisposable // Consider IDisposable
 
     private async Task ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages)
     {
+        if (configuration.OcrEnabled)
+        {
+            _scanningContext.OcrEngine = TesseractOcrEngine.Bundled(configuration.TessdataFolder); 
+        }
         var pdfExporter = new PdfExporter(_scanningContext);
         if (configuration.DocumentOptions == DocumentOptions.Combined)
         {
             var outputFile = Path.Combine(configuration.OutputFolder, $"{configuration.OutputBaseFileName}.pdf");
-            await pdfExporter.Export(outputFile, processedImages);
+            await ExportPdfAsync(pdfExporter, outputFile, processedImages, configuration.OcrEnabled);
         }
         else
         {
@@ -91,10 +96,21 @@ public class DocumentScanner : IDisposable // Consider IDisposable
                 // Ensure unique PDF filenames for individual files if base name is the same
                 var individualPdfName = $"{configuration.OutputBaseFileName}-{Guid.NewGuid()}.pdf";
                 var outputFile = Path.Combine(configuration.OutputFolder, individualPdfName);
-                await pdfExporter.Export(outputFile, [image]);
+                await ExportPdfAsync(pdfExporter, outputFile, [image], configuration.OcrEnabled);
             }
         }
+    }
 
+    private static async Task ExportPdfAsync(PdfExporter pdfExporter, string outputFile, IList<ProcessedImage> images, bool ocrEnabled)
+    {
+        if (ocrEnabled)
+        {
+            await pdfExporter.Export(outputFile, images, ocrParams: new OcrParams("eng"));
+        }
+        else
+        {
+            await pdfExporter.Export(outputFile, images);
+        }
     }
 
     private static void CleanUpImageFiles(IList<string> imageFiles, string folder)

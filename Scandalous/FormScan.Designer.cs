@@ -31,7 +31,7 @@
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormScan));
             pictureBox1 = new PictureBox();
-            folderBrowserDialog1 = new FolderBrowserDialog();
+            folderBrowserDialogOutputFolder = new FolderBrowserDialog();
             imageList1 = new ImageList(components);
             groupScanControls = new GroupBox();
             LabelStatus = new Label();
@@ -39,6 +39,9 @@
             TextBoxBaseFilename = new TextBox();
             LabelBaseFilename = new Label();
             groupBox1 = new GroupBox();
+            labelTessdataFolder = new Label();
+            buttonTesseractDataPath = new Button();
+            checkBoxOcr = new CheckBox();
             RadioButtonFlatbed = new RadioButton();
             RadioButtonFeederSimplex = new RadioButton();
             RadioButtonFeederDuplex = new RadioButton();
@@ -58,6 +61,7 @@
             scanButton = new Button();
             LabelOutputFolder = new Label();
             buttonOutputFolder = new Button();
+            folderBrowserDialogTessdataFolder = new FolderBrowserDialog();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             groupScanControls.SuspendLayout();
             groupBox1.SuspendLayout();
@@ -144,6 +148,9 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(labelTessdataFolder);
+            groupBox1.Controls.Add(buttonTesseractDataPath);
+            groupBox1.Controls.Add(checkBoxOcr);
             groupBox1.Controls.Add(RadioButtonFlatbed);
             groupBox1.Controls.Add(RadioButtonFeederSimplex);
             groupBox1.Controls.Add(RadioButtonFeederDuplex);
@@ -153,10 +160,43 @@
             groupBox1.Controls.Add(chkAutoDeskew);
             groupBox1.Location = new Point(16, 229);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(364, 106);
+            groupBox1.Size = new Size(364, 136);
             groupBox1.TabIndex = 20;
             groupBox1.TabStop = false;
             groupBox1.Text = "Scan Options";
+            // 
+            // labelTessdataFolder
+            // 
+            labelTessdataFolder.AutoSize = true;
+            labelTessdataFolder.BorderStyle = BorderStyle.FixedSingle;
+            labelTessdataFolder.Location = new Point(185, 95);
+            labelTessdataFolder.MinimumSize = new Size(160, 0);
+            labelTessdataFolder.Name = "labelTessdataFolder";
+            labelTessdataFolder.Size = new Size(160, 17);
+            labelTessdataFolder.TabIndex = 29;
+            labelTessdataFolder.Text = "c:\\tessdata";
+            // 
+            // buttonTesseractDataPath
+            // 
+            buttonTesseractDataPath.Location = new Point(70, 91);
+            buttonTesseractDataPath.Name = "buttonTesseractDataPath";
+            buttonTesseractDataPath.Size = new Size(102, 23);
+            buttonTesseractDataPath.TabIndex = 28;
+            buttonTesseractDataPath.Text = "Tessdata Folder";
+            buttonTesseractDataPath.UseVisualStyleBackColor = true;
+            buttonTesseractDataPath.Click += ButtonTesseractDataPath_Click;
+            // 
+            // checkBoxOcr
+            // 
+            checkBoxOcr.AutoSize = true;
+            checkBoxOcr.Checked = true;
+            checkBoxOcr.CheckState = CheckState.Checked;
+            checkBoxOcr.Location = new Point(14, 95);
+            checkBoxOcr.Name = "checkBoxOcr";
+            checkBoxOcr.Size = new Size(50, 19);
+            checkBoxOcr.TabIndex = 27;
+            checkBoxOcr.Text = "OCR";
+            checkBoxOcr.UseVisualStyleBackColor = true;
             // 
             // RadioButtonFlatbed
             // 
@@ -239,7 +279,7 @@
             grpDocumentOptions.Controls.Add(radioDocumentIndividual);
             grpDocumentOptions.Location = new Point(16, 166);
             grpDocumentOptions.Name = "grpDocumentOptions";
-            grpDocumentOptions.Size = new Size(349, 57);
+            grpDocumentOptions.Size = new Size(364, 57);
             grpDocumentOptions.TabIndex = 19;
             grpDocumentOptions.TabStop = false;
             grpDocumentOptions.Text = "Document Options";
@@ -273,7 +313,7 @@
             grpColorMode.Controls.Add(radioButtonGrayscale);
             grpColorMode.Location = new Point(16, 103);
             grpColorMode.Name = "grpColorMode";
-            grpColorMode.Size = new Size(349, 57);
+            grpColorMode.Size = new Size(364, 57);
             grpColorMode.TabIndex = 18;
             grpColorMode.TabStop = false;
             grpColorMode.Text = "Color Mode";
@@ -387,7 +427,7 @@
 
         #endregion
         private PictureBox pictureBox1;
-        private FolderBrowserDialog folderBrowserDialog1;
+        private FolderBrowserDialog folderBrowserDialogOutputFolder;
         private ImageList imageList1;
         private GroupBox groupScanControls;
         private Button scanButton;
@@ -414,5 +454,9 @@
         private RadioButton RadioButtonFeederDuplex;
         private RadioButton RadioButtonFlatbed;
         private RadioButton RadioButtonFeederSimplex;
+        private CheckBox checkBoxOcr;
+        private Button buttonTesseractDataPath;
+        private Label labelTessdataFolder;
+        private FolderBrowserDialog folderBrowserDialogTessdataFolder;
     }
 }
