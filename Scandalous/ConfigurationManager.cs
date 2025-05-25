@@ -39,5 +39,24 @@ namespace ScanUtility
             var json = await File.ReadAllTextAsync(_configFilePath);
             return JsonSerializer.Deserialize<ScanConfiguration>(json, CachedJsonSerializerOptions) ?? new ScanConfiguration();
         }
+
+        public static List<string> GetInstalledTessdataLanguageCodes(string tessdataFolder)
+        {
+            if (string.IsNullOrWhiteSpace(tessdataFolder) || !Directory.Exists(tessdataFolder))
+            {
+                return new List<string>();
+            }
+            var languageFiles = Directory.GetFiles(tessdataFolder, "*.traineddata", SearchOption.TopDirectoryOnly);
+            var languageCodes = new List<string>();
+            foreach (var file in languageFiles)
+            {
+                var fileName = Path.GetFileNameWithoutExtension(file);
+                if (!string.IsNullOrWhiteSpace(fileName))
+                {
+                    languageCodes.Add(fileName);
+                }
+            }
+            return languageCodes;
+        }
     }
 }

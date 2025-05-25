@@ -39,6 +39,7 @@
             TextBoxBaseFilename = new TextBox();
             LabelBaseFilename = new Label();
             groupBox1 = new GroupBox();
+            LabelTessdataLanguage = new Label();
             labelTessdataFolder = new Label();
             buttonTesseractDataPath = new Button();
             checkBoxOcr = new CheckBox();
@@ -62,6 +63,7 @@
             LabelOutputFolder = new Label();
             buttonOutputFolder = new Button();
             folderBrowserDialogTessdataFolder = new FolderBrowserDialog();
+            comboBoxLanguageCode = new ComboBox();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             groupScanControls.SuspendLayout();
             groupBox1.SuspendLayout();
@@ -75,7 +77,7 @@
             pictureBox1.Dock = DockStyle.Right;
             pictureBox1.Location = new Point(424, 0);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(589, 643);
+            pictureBox1.Size = new Size(589, 663);
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox1.TabIndex = 1;
             pictureBox1.TabStop = false;
@@ -103,7 +105,7 @@
             groupScanControls.Dock = DockStyle.Left;
             groupScanControls.Location = new Point(0, 0);
             groupScanControls.Name = "groupScanControls";
-            groupScanControls.Size = new Size(401, 643);
+            groupScanControls.Size = new Size(401, 663);
             groupScanControls.TabIndex = 11;
             groupScanControls.TabStop = false;
             // 
@@ -111,7 +113,7 @@
             // 
             LabelStatus.AutoSize = true;
             LabelStatus.BorderStyle = BorderStyle.FixedSingle;
-            LabelStatus.Location = new Point(22, 515);
+            LabelStatus.Location = new Point(22, 532);
             LabelStatus.MaximumSize = new Size(340, 86);
             LabelStatus.MinimumSize = new Size(340, 52);
             LabelStatus.Name = "LabelStatus";
@@ -122,7 +124,7 @@
             // LabelStatusLabel
             // 
             LabelStatusLabel.AutoSize = true;
-            LabelStatusLabel.Location = new Point(19, 494);
+            LabelStatusLabel.Location = new Point(19, 511);
             LabelStatusLabel.Name = "LabelStatusLabel";
             LabelStatusLabel.Size = new Size(39, 15);
             LabelStatusLabel.TabIndex = 23;
@@ -148,6 +150,8 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(comboBoxLanguageCode);
+            groupBox1.Controls.Add(LabelTessdataLanguage);
             groupBox1.Controls.Add(labelTessdataFolder);
             groupBox1.Controls.Add(buttonTesseractDataPath);
             groupBox1.Controls.Add(checkBoxOcr);
@@ -158,12 +162,21 @@
             groupBox1.Controls.Add(ComboBoxDpi);
             groupBox1.Controls.Add(chkExcludeBlankPages);
             groupBox1.Controls.Add(chkAutoDeskew);
-            groupBox1.Location = new Point(16, 229);
+            groupBox1.Location = new Point(16, 217);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(364, 136);
+            groupBox1.Size = new Size(364, 165);
             groupBox1.TabIndex = 20;
             groupBox1.TabStop = false;
             groupBox1.Text = "Scan Options";
+            // 
+            // LabelTessdataLanguage
+            // 
+            LabelTessdataLanguage.AutoSize = true;
+            LabelTessdataLanguage.Location = new Point(35, 125);
+            LabelTessdataLanguage.Name = "LabelTessdataLanguage";
+            LabelTessdataLanguage.Size = new Size(137, 15);
+            LabelTessdataLanguage.TabIndex = 30;
+            LabelTessdataLanguage.Text = "Tessdata Language Code";
             // 
             // labelTessdataFolder
             // 
@@ -277,7 +290,7 @@
             // 
             grpDocumentOptions.Controls.Add(radioDocumentCombined);
             grpDocumentOptions.Controls.Add(radioDocumentIndividual);
-            grpDocumentOptions.Location = new Point(16, 166);
+            grpDocumentOptions.Location = new Point(16, 154);
             grpDocumentOptions.Name = "grpDocumentOptions";
             grpDocumentOptions.Size = new Size(364, 57);
             grpDocumentOptions.TabIndex = 19;
@@ -311,7 +324,7 @@
             grpColorMode.Controls.Add(radioButtonColor);
             grpColorMode.Controls.Add(radioButtonBlackWhite);
             grpColorMode.Controls.Add(radioButtonGrayscale);
-            grpColorMode.Location = new Point(16, 103);
+            grpColorMode.Location = new Point(16, 91);
             grpColorMode.Name = "grpColorMode";
             grpColorMode.Size = new Size(364, 57);
             grpColorMode.TabIndex = 18;
@@ -353,14 +366,14 @@
             // lstScanners
             // 
             lstScanners.FormattingEnabled = true;
-            lstScanners.Location = new Point(16, 371);
+            lstScanners.Location = new Point(16, 388);
             lstScanners.Name = "lstScanners";
             lstScanners.Size = new Size(349, 79);
             lstScanners.TabIndex = 17;
             // 
             // btnGetScannerList
             // 
-            btnGetScannerList.Location = new Point(16, 456);
+            btnGetScannerList.Location = new Point(16, 473);
             btnGetScannerList.Name = "btnGetScannerList";
             btnGetScannerList.Size = new Size(114, 22);
             btnGetScannerList.TabIndex = 16;
@@ -370,7 +383,7 @@
             // 
             // scanButton
             // 
-            scanButton.Location = new Point(16, 601);
+            scanButton.Location = new Point(16, 618);
             scanButton.Name = "scanButton";
             scanButton.Size = new Size(75, 23);
             scanButton.TabIndex = 10;
@@ -399,11 +412,20 @@
             buttonOutputFolder.UseVisualStyleBackColor = true;
             buttonOutputFolder.Click += ButtonOutputFolder_Click;
             // 
+            // comboBoxLanguageCode
+            // 
+            comboBoxLanguageCode.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxLanguageCode.FormattingEnabled = true;
+            comboBoxLanguageCode.Location = new Point(185, 122);
+            comboBoxLanguageCode.Name = "comboBoxLanguageCode";
+            comboBoxLanguageCode.Size = new Size(121, 23);
+            comboBoxLanguageCode.TabIndex = 31;
+            // 
             // FormScan
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1013, 643);
+            ClientSize = new Size(1013, 663);
             Controls.Add(groupScanControls);
             Controls.Add(pictureBox1);
             Icon = (Icon)resources.GetObject("$this.Icon");
@@ -458,5 +480,7 @@
         private Button buttonTesseractDataPath;
         private Label labelTessdataFolder;
         private FolderBrowserDialog folderBrowserDialogTessdataFolder;
+        private Label LabelTessdataLanguage;
+        private ComboBox comboBoxLanguageCode;
     }
 }

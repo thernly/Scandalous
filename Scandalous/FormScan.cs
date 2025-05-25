@@ -164,6 +164,28 @@ public partial class FormScan : Form
         ComboBoxDpi.Text = scanConfiguration.ScanResolutionDPI.ToString();
         checkBoxOcr.Checked = scanConfiguration.OcrEnabled;
         labelTessdataFolder.Text = scanConfiguration.TessdataFolder;
+        PopulateLanguageCodesDropDownList(scanConfiguration.TessdataLanguageCode);
+    }
+
+    private void PopulateLanguageCodesDropDownList(string userSelectedLanguageCode)
+    {         
+        comboBoxLanguageCode.Items.Clear();
+        var languageCodes = ConfigurationManager.GetInstalledTessdataLanguageCodes(labelTessdataFolder.Text);
+        foreach (var code in languageCodes)
+        {
+            comboBoxLanguageCode.Items.Add(code);
+        }
+        if (comboBoxLanguageCode.Items.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(userSelectedLanguageCode) && comboBoxLanguageCode.Items.Contains(userSelectedLanguageCode))
+            {
+                comboBoxLanguageCode.SelectedItem = userSelectedLanguageCode; // Select user's preferred language code if available
+            }
+            else
+            {
+                comboBoxLanguageCode.SelectedIndex = 0; // Fallback to the first item if user's preferred code is not available
+            }
+        }
     }
 
     private void FormScan_Shown(object sender, EventArgs e)
@@ -177,9 +199,11 @@ public partial class FormScan : Form
     {
         var configManager = new ConfigurationManager();
         var scannerPaperSource = GetScannerPaperSource();
+        var selectedLanguageCode = comboBoxLanguageCode.SelectedItem?.ToString() ?? "eng"; // Default to "eng" if no selection
         var scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, GetScannerColorMode(),
             radioDocumentCombined.Checked ? DocumentOptions.Combined : DocumentOptions.Individual, chkAutoDeskew.Checked,
-            chkExcludeBlankPages.Checked, int.Parse(ComboBoxDpi.Text), scannerPaperSource, checkBoxOcr.Checked, labelTessdataFolder.Text);
+            chkExcludeBlankPages.Checked, int.Parse(ComboBoxDpi.Text), scannerPaperSource, checkBoxOcr.Checked, labelTessdataFolder.Text,
+            selectedLanguageCode);
         await configManager.SaveConfigurationAsync(scanConfiguration);
     }
 

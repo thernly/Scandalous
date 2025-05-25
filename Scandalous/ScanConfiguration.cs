@@ -8,7 +8,7 @@
         public ScanConfiguration(string outputFolder, string baseFileName, ScannerColorMode colorMode = ScannerColorMode.Grayscale,
                                  DocumentOptions documentOptions = DocumentOptions.Combined, bool autoDeskew = true,
                                  bool excludeBlankPages = true, int scanResolutionDpi = 300, ScannerPaperSource scannerPaperSource = ScannerPaperSource.Auto,
-                                 bool ocrEnabled = false, string tessdataFolder = "")
+                                 bool ocrEnabled = false, string tessdataFolder = "", string languageCode = "eng")
         {            
             FolderValidator.Validate(outputFolder); 
             OutputFolder = outputFolder;
@@ -26,7 +26,8 @@
             
             OcrEnabled = ocrEnabled;
             FolderValidator.Validate(tessdataFolder); 
-            TessdataFolder = tessdataFolder; 
+            TessdataFolder = tessdataFolder;
+            TessdataLanguageCode = languageCode;
         }
         public string OutputFolder { get; set; } = string.Empty;
         public string OutputBaseFileName { get; set; } = string.Empty;
@@ -38,5 +39,6 @@
         public ScannerPaperSource ScannerPaperSource { get; set; } = ScannerPaperSource.Auto;
         public bool OcrEnabled { get; set; } = false; 
         public string TessdataFolder { get; set; } = string.Empty; // Path to Tesseract's tessdata folder, if OCR is enabled
+        public string TessdataLanguageCode { get; set; } = "eng"; // Default language code for Tesseract OCR
     }
 }
