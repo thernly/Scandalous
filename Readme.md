@@ -13,12 +13,16 @@ Scandalous is a Windows Forms application for scanning documents using TWAIN/WIA
 *   Automatic image processing options:
     *   Auto Deskew: Straightens skewed images.
     *   Exclude Blank Pages: Detects and removes blank pages.
+*   **OCR (Optical Character Recognition) support:**
+    *   Enable OCR to make scanned PDFs searchable.
+    *   Select the desired OCR language from installed Tesseract language data files.
+    *   Requires downloading the appropriate `tessdata` language files (see [OCR Requirements](#ocr-requirements)).
 *   Output scanned documents as:
     *   A single combined PDF file.
     *   Individual PDF files for each scanned page.
 *   User-friendly interface to:
     *   Select output folder and base filename.
-    *   Configure scan options (color, DPI, paper source, etc.).
+    *   Configure scan options (color, DPI, paper source, OCR, etc.).
     *   Initiate scanning.
     *   View status updates.
 *   Preview scanned pages (as temporary PNGs) within the application with navigation controls.
@@ -35,6 +39,15 @@ Scandalous is a Windows Forms application for scanning documents using TWAIN/WIA
 *   Dependencies (managed via NuGet):
     *   `NAPS2.Sdk`
     *   `NAPS2.Images.Gdi`
+
+## OCR Requirements
+
+To use the OCR feature, you must download the appropriate Tesseract language data files:
+
+1. Visit [https://github.com/tesseract-ocr/tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast).
+2. Download the `.traineddata` files for the languages you wish to use (e.g., `eng.traineddata` for English).
+3. Place these files in a folder on your system (e.g., `C:\tessdata`).
+4. In the application, set the "Tessdata Folder" to this directory and select the desired language code.
 
 ## How to Use
 
@@ -65,6 +78,9 @@ Scandalous is a Windows Forms application for scanning documents using TWAIN/WIA
 8.  **Options:**
     *   `Auto Deskew`: Check this box to enable automatic straightening of scanned images.
     *   `Exclude Blank Pages`: Check this box to enable automatic detection and removal of blank pages from the scan job.
+    *   **OCR**: Check this box to enable OCR for scanned documents. When enabled:
+        *   Set the "Tessdata Folder" to the directory containing your `.traineddata` files.
+        *   Select the desired OCR language from the dropdown.
 9.  **Scanner Information:**
     *   Click "Get Scanner List" to populate the list box with names of available scanners detected on your system.
     *   The selected scanner will be used for scanning operations.
@@ -94,6 +110,9 @@ The core scan settings are managed through the `ScanConfiguration` class, which 
 *   `ExcludeBlankPages`: `true` or `false`.
 *   `ScanResolutionDPI`: User-selectable DPI (default 300).
 *   `ScannerPaperSource`: User-selectable (`Auto`, `FeederSimplex`, `FeederDuplex`, `Flatbed`).
+*   `OcrEnabled`: `true` or `false`.
+*   `TessdataFolder`: Path to the folder containing Tesseract `.traineddata` files.
+*   `TessdataLanguageCode`: The selected language code for OCR (e.g., "eng", "deu").
 
 ## Input Validation
 
@@ -119,7 +138,7 @@ The application incorporates validators to ensure robust handling of user inputs
 *   `Scandalous.csproj`: The C# project file, defining target framework (.NET 9), dependencies, and build settings.
 *   `Program.cs`: The main entry point for the Windows Forms application.
 *   `FormScan.cs`: Implements the user interface, event handling, and orchestrates the scanning process based on user input.
-*   `DocumentScanner.cs`: Contains the core logic for interacting with scanners via `NAPS2.Sdk`. It handles device discovery, scan execution, image processing, and PDF export.
+*   `DocumentScanner.cs`: Contains the core logic for interacting with scanners via `NAPS2.Sdk`. It handles device discovery, scan execution, image processing, PDF export, and OCR integration.
 *   `ScanConfiguration.cs`: A data class that holds all configuration parameters for a scan operation.
 *   `PageScannedEventArgs.cs` (Defined within `DocumentScanner.cs` context or as a separate file, used by `PageScanned` event): Carries the file path of a newly scanned page image.
 *   `FileNameValidator.cs`: A static utility class providing methods to validate file names against common operating system and file system rules.
