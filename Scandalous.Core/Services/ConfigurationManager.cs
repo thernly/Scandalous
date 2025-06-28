@@ -33,6 +33,18 @@ namespace Scandalous.Core.Services
 
         public async Task SaveConfigurationAsync(ScanConfiguration configuration)
         {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
+            // Ensure the directory exists
+            var directory = Path.GetDirectoryName(_configFilePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             var json = JsonSerializer.Serialize(configuration, CachedJsonSerializerOptions);
             await File.WriteAllTextAsync(_configFilePath, json);
         }
@@ -43,8 +55,30 @@ namespace Scandalous.Core.Services
             {
                 return new ScanConfiguration();
             }
-            var json = await File.ReadAllTextAsync(_configFilePath);
-            return JsonSerializer.Deserialize<ScanConfiguration>(json, CachedJsonSerializerOptions) ?? new ScanConfiguration();
+
+            try
+            {
+                var json = await File.ReadAllTextAsync(_configFilePath);
+                
+                // Handle empty or whitespace files
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    return new ScanConfiguration();
+                }
+
+                var result = JsonSerializer.Deserialize<ScanConfiguration>(json, CachedJsonSerializerOptions);
+                return result ?? new ScanConfiguration();
+            }
+            catch (JsonException)
+            {
+                // Return default configuration if JSON is corrupted or invalid
+                return new ScanConfiguration();
+            }
+            catch (IOException)
+            {
+                // Return default configuration if file is in use or inaccessible
+                return new ScanConfiguration();
+            }
         }
 
         public List<string> GetInstalledTessdataLanguageCodes(string tessdataFolder)
