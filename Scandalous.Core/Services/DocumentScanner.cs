@@ -26,6 +26,22 @@ namespace Scandalous.Core.Services
         {
             ThrowIfDisposed();
             
+            // Validate configuration
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+            
+            if (string.IsNullOrWhiteSpace(configuration.OutputFolder))
+            {
+                throw new ArgumentException("Output folder cannot be null, empty, or whitespace.", nameof(configuration));
+            }
+            
+            if (string.IsNullOrWhiteSpace(configuration.OutputBaseFileName))
+            {
+                throw new ArgumentException("Output base file name cannot be null, empty, or whitespace.", nameof(configuration));
+            }
+            
             var device = await GetFirstAvailableDevice() ?? throw new InvalidOperationException("No scanner device available.");
             var options = PrepareScanOptions(device, configuration);
             List<ProcessedImage> processedImages = []; 
