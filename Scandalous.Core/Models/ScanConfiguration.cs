@@ -1,4 +1,7 @@
-﻿namespace ScanUtility
+using Scandalous.Core.Validation;
+using Scandalous.Core.Enums;
+
+namespace Scandalous.Core.Models
 {
     public class ScanConfiguration
     {
@@ -41,4 +44,4 @@
         public string TessdataFolder { get; set; } = string.Empty; // Path to Tesseract's tessdata folder, if OCR is enabled
         public string TessdataLanguageCode { get; set; } = "eng"; // Default language code for Tesseract OCR
     }
-}
+} 

@@ -1,4 +1,4 @@
-namespace ScanUtility
+namespace Scandalous.Core.Validation
 {
     public static class FileNameValidator
     {
@@ -123,4 +123,4 @@ namespace ScanUtility
             }
         }
     }
-}
+} 

@@ -1,4 +1,4 @@
-namespace ScanUtility
+namespace Scandalous.Core.Validation
 {
     public static class FolderValidator
     {
@@ -145,4 +145,4 @@ namespace ScanUtility
             }
         }
     }
-}
+} 

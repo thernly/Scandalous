@@ -1,8 +1,9 @@
-﻿using System.Text.Json;
+using System.Text.Json;
+using Scandalous.Core.Models;
 
-namespace ScanUtility
+namespace Scandalous.Core.Services
 {
-    internal class ConfigurationManager
+    public class ConfigurationManager : IConfigurationManager
     {
         private const string ConfigFileName = "ScanUtilityConfig.json";
         private readonly string _configFilePath;
@@ -24,6 +25,12 @@ namespace ScanUtility
             _configFilePath = Path.Combine(appDataPath, ConfigFileName);
         }
 
+        // Protected constructor for testability
+        protected ConfigurationManager(string configFilePath)
+        {
+            _configFilePath = configFilePath;
+        }
+
         public async Task SaveConfigurationAsync(ScanConfiguration configuration)
         {
             var json = JsonSerializer.Serialize(configuration, CachedJsonSerializerOptions);
@@ -40,7 +47,7 @@ namespace ScanUtility
             return JsonSerializer.Deserialize<ScanConfiguration>(json, CachedJsonSerializerOptions) ?? new ScanConfiguration();
         }
 
-        public static List<string> GetInstalledTessdataLanguageCodes(string tessdataFolder)
+        public List<string> GetInstalledTessdataLanguageCodes(string tessdataFolder)
         {
             if (string.IsNullOrWhiteSpace(tessdataFolder) || !Directory.Exists(tessdataFolder))
             {
@@ -59,4 +66,4 @@ namespace ScanUtility
             return languageCodes;
         }
     }
-}
+} 

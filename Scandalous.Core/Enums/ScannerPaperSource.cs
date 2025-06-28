@@ -1,4 +1,4 @@
-﻿namespace ScanUtility
+namespace Scandalous.Core.Enums
 {
     public enum ScannerPaperSource
     {
@@ -7,4 +7,4 @@
         FeederDuplex,
         FeederSimplex,
     }
-}
+} 

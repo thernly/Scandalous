@@ -1,18 +1,24 @@
 using NAPS2.Scan.Exceptions;
+using Scandalous.Core.Enums;
+using Scandalous.Core.Models;
+using Scandalous.Core.Services;
 
 
 namespace ScanUtility;
 
 public partial class FormScan : Form
 {
-    private readonly DocumentScanner scanner;
+    private readonly IDocumentScanner _scanner;
+    private readonly IConfigurationManager _configManager;
     private readonly List<string> _imageFileList;
 
-    public FormScan()
+    public FormScan(IDocumentScanner scanner, IConfigurationManager configManager)
     {
+        _scanner = scanner ?? throw new ArgumentNullException(nameof(scanner));
+        _configManager = configManager ?? throw new ArgumentNullException(nameof(configManager));
+        
         InitializeComponent();
-        scanner = new DocumentScanner();
-        scanner.PageScanned += OnPageScanned;
+        _scanner.PageScanned += OnPageScanned;
         _imageFileList = [];
     }
 
@@ -20,36 +26,21 @@ public partial class FormScan : Form
     {
         Cursor = Cursors.WaitCursor;
         LabelStatus.Text = "Building configuration...";
-        var documentOptions = DocumentOptions.Individual;
-        if (radioDocumentCombined.Checked)
-        {
-            documentOptions = DocumentOptions.Combined;
-        }
-        var colorMode = GetScannerColorMode();
-        var dpi = int.Parse(ComboBoxDpi.Text);
-        var scannerPaperSource = GetScannerPaperSource();
-
-
         ScanConfiguration scanConfiguration;
         try
         {
-            scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, colorMode,
-                                                          documentOptions, chkAutoDeskew.Checked, chkExcludeBlankPages.Checked, dpi,
-                                                          scannerPaperSource, checkBoxOcr.Checked, labelTessdataFolder.Text);
+            scanConfiguration = BuildScanConfigurationFromUI();
         }
         catch (Exception ex)
         {
-            ShowExceptionMessage($"An error occurred: {ex.Message}");
-            Cursor = Cursors.Default;
+            HandleScanException(ex);
             return;
         }
 
         try
         {
-            _imageFileList.Clear();
-            pictureBox1.Image = null;
-            LabelStatus.Text = "Scanning...";
-            await scanner.ScanDocuments(scanConfiguration);
+            PrepareForScan();
+            await _scanner.ScanDocuments(scanConfiguration);
             LabelStatus.Text = "Scanning completed.";
         }
         catch (DeviceFeederEmptyException)
@@ -62,13 +53,46 @@ public partial class FormScan : Form
         }
         catch (Exception ex)
         {
-            ShowExceptionMessage($"An error occurred: {ex.Message}");
+            HandleScanException(ex);
         }
         finally
         {
             Cursor = Cursors.Default;
         }
         ShowPDF(scanConfiguration);
+    }
+
+    private ScanConfiguration BuildScanConfigurationFromUI()
+    {
+        var documentOptions = radioDocumentCombined.Checked ? DocumentOptions.Combined : DocumentOptions.Individual;
+        var colorMode = GetScannerColorMode();
+        var dpi = int.Parse(ComboBoxDpi.Text);
+        var scannerPaperSource = GetScannerPaperSource();
+        return new ScanConfiguration(
+            LabelOutputFolder.Text,
+            TextBoxBaseFilename.Text,
+            colorMode,
+            documentOptions,
+            chkAutoDeskew.Checked,
+            chkExcludeBlankPages.Checked,
+            dpi,
+            scannerPaperSource,
+            checkBoxOcr.Checked,
+            labelTessdataFolder.Text
+        );
+    }
+
+    private void HandleScanException(Exception ex)
+    {
+        ShowExceptionMessage($"An error occurred: {ex.Message}");
+        Cursor = Cursors.Default;
+    }
+
+    private void PrepareForScan()
+    {
+        _imageFileList.Clear();
+        pictureBox1.Image = null;
+        LabelStatus.Text = "Scanning...";
     }
 
     private void ShowExceptionMessage(string message)
@@ -115,7 +139,7 @@ public partial class FormScan : Form
 
     private async void ButtonGetScannerList_Click(object sender, EventArgs e)
     {
-        var devices = await scanner.GetScanDevicesAsync();
+        var devices = await _scanner.GetScanDevicesAsync();
         foreach (var device in devices)
         {
             lstScanners.Items.Add(device.Name);
@@ -147,8 +171,12 @@ public partial class FormScan : Form
 
     private async void FormScan_Load(object sender, EventArgs e)
     {
-        var configManager = new ConfigurationManager();
-        var scanConfiguration = await configManager.LoadConfigurationAsync();
+        var scanConfiguration = await _configManager.LoadConfigurationAsync();
+        ApplyConfigurationToUI(scanConfiguration);
+    }
+
+    private void ApplyConfigurationToUI(ScanConfiguration scanConfiguration)
+    {
         LabelOutputFolder.Text = scanConfiguration.OutputFolder;
         TextBoxBaseFilename.Text = scanConfiguration.OutputBaseFileName;
         chkAutoDeskew.Checked = scanConfiguration.AutoDeskew;
@@ -170,7 +198,7 @@ public partial class FormScan : Form
     private void PopulateLanguageCodesDropDownList(string userSelectedLanguageCode)
     {         
         comboBoxLanguageCode.Items.Clear();
-        var languageCodes = ConfigurationManager.GetInstalledTessdataLanguageCodes(labelTessdataFolder.Text);
+        var languageCodes = _configManager.GetInstalledTessdataLanguageCodes(labelTessdataFolder.Text);
         foreach (var code in languageCodes)
         {
             comboBoxLanguageCode.Items.Add(code);
@@ -197,14 +225,13 @@ public partial class FormScan : Form
 
     private async void FormScan_Closing(object sender, FormClosingEventArgs e)
     {
-        var configManager = new ConfigurationManager();
         var scannerPaperSource = GetScannerPaperSource();
         var selectedLanguageCode = comboBoxLanguageCode.SelectedItem?.ToString() ?? "eng"; // Default to "eng" if no selection
         var scanConfiguration = new ScanConfiguration(LabelOutputFolder.Text, TextBoxBaseFilename.Text, GetScannerColorMode(),
             radioDocumentCombined.Checked ? DocumentOptions.Combined : DocumentOptions.Individual, chkAutoDeskew.Checked,
             chkExcludeBlankPages.Checked, int.Parse(ComboBoxDpi.Text), scannerPaperSource, checkBoxOcr.Checked, labelTessdataFolder.Text,
             selectedLanguageCode);
-        await configManager.SaveConfigurationAsync(scanConfiguration);
+        await _configManager.SaveConfigurationAsync(scanConfiguration);
     }
 
     private void ButtonTesseractDataPath_Click(object sender, EventArgs e)
