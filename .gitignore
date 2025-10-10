@@ -401,3 +401,9 @@ FodyWeavers.xsd
 *.bak
 *.old
 *.backup
+
+# Code Reviews/Assessments
+*assessment*.md
+Documents/Assessments/
+Documents/CodeReviews/
+Documents/Tasks/

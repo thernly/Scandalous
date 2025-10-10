@@ -99,5 +99,63 @@ namespace Scandalous.Core.Services
             }
             return languageCodes;
         }
+
+        public async Task SaveWindowStateAsync(WindowStateInfo windowState)
+        {
+            if (windowState == null)
+            {
+                throw new ArgumentNullException(nameof(windowState));
+            }
+
+            var windowStateFilePath = Path.Combine(
+                Path.GetDirectoryName(_configFilePath) ?? string.Empty, 
+                "WindowState.json");
+
+            // Ensure the directory exists
+            var directory = Path.GetDirectoryName(windowStateFilePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var json = JsonSerializer.Serialize(windowState, CachedJsonSerializerOptions);
+            await File.WriteAllTextAsync(windowStateFilePath, json);
+        }
+
+        public async Task<WindowStateInfo?> LoadWindowStateAsync()
+        {
+            var windowStateFilePath = Path.Combine(
+                Path.GetDirectoryName(_configFilePath) ?? string.Empty, 
+                "WindowState.json");
+
+            if (!File.Exists(windowStateFilePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                var json = await File.ReadAllTextAsync(windowStateFilePath);
+                
+                // Handle empty or whitespace files
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    return null;
+                }
+
+                var result = JsonSerializer.Deserialize<WindowStateInfo>(json, CachedJsonSerializerOptions);
+                return result;
+            }
+            catch (JsonException)
+            {
+                // Return null if JSON is corrupted or invalid
+                return null;
+            }
+            catch (IOException)
+            {
+                // Return null if file is in use or inaccessible
+                return null;
+            }
+        }
     }
 } 

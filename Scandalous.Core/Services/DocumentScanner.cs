@@ -22,44 +22,49 @@ namespace Scandalous.Core.Services
             _scanController = new ScanController(_scanningContext);
         }
 
-        public async Task ScanDocuments(ScanConfiguration configuration)
+        public async Task ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
-            
-            // Validate configuration
+
             if (configuration == null)
             {
                 throw new ArgumentNullException(nameof(configuration));
             }
-            
+
             if (string.IsNullOrWhiteSpace(configuration.OutputFolder))
             {
                 throw new ArgumentException("Output folder cannot be null, empty, or whitespace.", nameof(configuration));
             }
-            
+
             if (string.IsNullOrWhiteSpace(configuration.OutputBaseFileName))
             {
                 throw new ArgumentException("Output base file name cannot be null, empty, or whitespace.", nameof(configuration));
             }
-            
-            var device = await GetFirstAvailableDevice() ?? throw new InvalidOperationException("No scanner device available.");
+
+            var deviceList = await _scanController.GetDeviceList();
+            var device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName);
+            if (device is null)
+            {
+                throw new InvalidOperationException("The selected scanner is offline.");
+            }
+                
             var options = PrepareScanOptions(device, configuration);
-            List<ProcessedImage> processedImages = []; 
+            List<ProcessedImage> processedImages = [];
             var imageFiles = new List<string>();
 
             try
             {
-                (processedImages, imageFiles) = await PerformScanning(options, configuration.OutputFolder);
+                (processedImages, imageFiles) = await PerformScanning(options, configuration.OutputFolder, cancellationToken);
 
-                if (processedImages.Count > 0) // Only export if there are images
+                if (processedImages.Count > 0)
                 {
-                    await ExportImagesToPdfAsync(configuration, processedImages);
+                    await ExportImagesToPdfAsync(configuration, processedImages, cancellationToken);
                 }
             }
             finally
             {
                 CleanUpImageFiles(imageFiles, configuration.OutputFolder);
-                DisposeImages(processedImages); // Dispose images after exporting to PDF
+                DisposeImages(processedImages);
             }
         }
 
@@ -72,12 +77,12 @@ namespace Scandalous.Core.Services
             return options;
         }
 
-        private async Task<(List<ProcessedImage> scannedImages, List<string> tempFiles)> PerformScanning(ScanOptions scanOptions, string outputFolder)
+        private async Task<(List<ProcessedImage> scannedImages, List<string> tempFiles)> PerformScanning(ScanOptions scanOptions, string outputFolder, CancellationToken cancellationToken)
         {
             var images = new List<ProcessedImage>();
             var tempFiles = new List<string>();
 
-            await foreach (var image in _scanController.Scan(scanOptions))
+            await foreach (var image in _scanController.Scan(scanOptions).WithCancellation(cancellationToken))
             {
                 images.Add(image);
                 Guid guid = Guid.CreateVersion7();
@@ -89,11 +94,11 @@ namespace Scandalous.Core.Services
             return (images, tempFiles);
         }
 
-        private async Task ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages)
+        private async Task ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
         {
             if (configuration.OcrEnabled)
             {
-                _scanningContext.OcrEngine = TesseractOcrEngine.Bundled(configuration.TessdataFolder); 
+                _scanningContext.OcrEngine = TesseractOcrEngine.Bundled(configuration.TessdataFolder);
             }
             var pdfExporter = new PdfExporter(_scanningContext);
             if (configuration.DocumentOptions == DocumentOptions.Combined)
@@ -105,7 +110,7 @@ namespace Scandalous.Core.Services
             {
                 foreach (var image in processedImages)
                 {
-                    // Ensure unique PDF filenames for individual files if base name is the same
+                    cancellationToken.ThrowIfCancellationRequested();
                     var individualPdfName = $"{configuration.OutputBaseFileName}-{Guid.NewGuid()}.pdf";
                     var outputFile = Path.Combine(configuration.OutputFolder, individualPdfName);
                     await ExportPdfAsync(pdfExporter, outputFile, [image], configuration.OcrEnabled);

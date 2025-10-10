@@ -30,6 +30,10 @@ namespace ScanUtility
             // Register services
             services.AddSingleton<IDocumentScanner, DocumentScanner>();
             services.AddSingleton<IConfigurationManager, ConfigurationManager>();
+            services.AddSingleton<IScanConfigurationMapper, ScanConfigurationMapper>();
+            services.AddSingleton<IPdfService, PdfService>();
+            services.AddSingleton<ILanguageCodeService, LanguageCodeService>();
+            services.AddSingleton<IScanExceptionHandler, ScanExceptionHandler>();
             
             // Register the main form
             services.AddTransient<FormScan>();

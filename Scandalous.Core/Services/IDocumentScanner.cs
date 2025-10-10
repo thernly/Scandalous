@@ -6,7 +6,7 @@ namespace Scandalous.Core.Services
     public interface IDocumentScanner : IDisposable
     {
         event EventHandler<PageScannedEventArgs>? PageScanned;
-        Task ScanDocuments(ScanConfiguration configuration);
+        Task ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default);
         Task<List<ScanDevice>> GetScanDevicesAsync();
     }
 } 
