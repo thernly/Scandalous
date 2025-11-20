@@ -1,4 +1,3 @@
-using FluentAssertions;
 using ScanUtility;
 using Xunit;
 
@@ -27,18 +26,18 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.Should().NotBeNull();
-            config.OutputFolder.Should().Be("C:\\Scans");
-            config.OutputBaseFileName.Should().Be("Document");
-            config.ColorMode.Should().Be(ScannerColorMode.Color);
-            config.DocumentOptions.Should().Be(DocumentOptions.Combined);
-            config.AutoDeskew.Should().BeTrue();
-            config.ExcludeBlankPages.Should().BeTrue();
-            config.ScanResolutionDPI.Should().Be(300);
-            config.ScannerPaperSource.Should().Be(ScannerPaperSource.Auto);
-            config.OcrEnabled.Should().BeFalse();
-            config.TessdataFolder.Should().Be("C:\\Tessdata");
-            config.TessdataLanguageCode.Should().Be("eng");
+            Assert.NotNull(config);
+            Assert.Equal("C:\\Scans", config.OutputFolder);
+            Assert.Equal("Document", config.OutputBaseFileName);
+            Assert.Equal(ScannerColorMode.Color, config.ColorMode);
+            Assert.Equal(DocumentOptions.Combined, config.DocumentOptions);
+            Assert.True(config.AutoDeskew);
+            Assert.True(config.ExcludeBlankPages);
+            Assert.Equal(300, config.ScanResolutionDPI);
+            Assert.Equal(ScannerPaperSource.Auto, config.ScannerPaperSource);
+            Assert.False(config.OcrEnabled);
+            Assert.Equal("C:\\Tessdata", config.TessdataFolder);
+            Assert.Equal("eng", config.TessdataLanguageCode);
         }
 
         [Fact]
@@ -52,14 +51,14 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.ColorMode.Should().Be(ScannerColorMode.Grayscale);
-            config.DocumentOptions.Should().Be(DocumentOptions.Combined);
-            config.AutoDeskew.Should().BeTrue();
-            config.ExcludeBlankPages.Should().BeTrue();
-            config.ScanResolutionDPI.Should().Be(300);
-            config.ScannerPaperSource.Should().Be(ScannerPaperSource.Auto);
-            config.OcrEnabled.Should().BeFalse();
-            config.TessdataLanguageCode.Should().Be("eng");
+            Assert.Equal(ScannerColorMode.Grayscale, config.ColorMode);
+            Assert.Equal(DocumentOptions.Combined, config.DocumentOptions);
+            Assert.True(config.AutoDeskew);
+            Assert.True(config.ExcludeBlankPages);
+            Assert.Equal(300, config.ScanResolutionDPI);
+            Assert.Equal(ScannerPaperSource.Auto, config.ScannerPaperSource);
+            Assert.False(config.OcrEnabled);
+            Assert.Equal("eng", config.TessdataLanguageCode);
         }
 
         [Fact]
@@ -69,9 +68,9 @@ namespace Scandalous.Tests
             var config = new ScanConfiguration();
 
             // Assert
-            config.Should().NotBeNull();
-            config.OutputFolder.Should().BeEmpty();
-            config.OutputBaseFileName.Should().BeEmpty();
+            Assert.NotNull(config);
+            Assert.Empty(config.OutputFolder);
+            Assert.Empty(config.OutputBaseFileName);
         }
 
         #endregion
@@ -81,59 +80,47 @@ namespace Scandalous.Tests
         [Fact]
         public void Constructor_NullOutputFolder_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: null!,
                 baseFileName: "Document",
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>();
+            ));
         }
 
         [Fact]
         public void Constructor_EmptyOutputFolder_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: string.Empty,
                 baseFileName: "Document",
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>();
+            ));
         }
 
         [Fact]
         public void Constructor_InvalidOutputFolder_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "Invalid|Folder",
                 baseFileName: "Document",
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*invalid character*");
+            ));
+            Assert.Contains("invalid character", exception.Message);
         }
 
         [Fact]
         public void Constructor_OutputFolderWithReservedName_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "CON",
                 baseFileName: "Document",
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*reserved*");
+            ));
+            Assert.Contains("reserved", exception.Message);
         }
 
         #endregion
@@ -143,74 +130,59 @@ namespace Scandalous.Tests
         [Fact]
         public void Constructor_NullBaseFileName_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:\\Scans",
                 baseFileName: null!,
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>();
+            ));
         }
 
         [Fact]
         public void Constructor_EmptyBaseFileName_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:\\Scans",
                 baseFileName: string.Empty,
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>();
+            ));
         }
 
         [Fact]
         public void Constructor_BaseFileNameWithExtension_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:\\Scans",
                 baseFileName: "Document.pdf",
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*extension separator*");
+            ));
+            Assert.Contains("extension separator", exception.Message);
         }
 
         [Fact]
         public void Constructor_BaseFileNameWithInvalidCharacters_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:\\Scans",
                 baseFileName: "Invalid/Name",
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*invalid character*");
+            ));
+            Assert.Contains("invalid character", exception.Message);
         }
 
         [Fact]
         public void Constructor_BaseFileNameIsReservedName_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:\\Scans",
                 baseFileName: "CON",
                 tessdataFolder: "C:\\Tessdata"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*reserved*");
+            ));
+            Assert.Contains("reserved", exception.Message);
         }
 
         #endregion
@@ -220,44 +192,35 @@ namespace Scandalous.Tests
         [Fact]
         public void Constructor_NullTessdataFolder_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:\\Scans",
                 baseFileName: "Document",
                 tessdataFolder: null!
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>();
+            ));
         }
 
         [Fact]
         public void Constructor_EmptyTessdataFolder_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:\\Scans",
                 baseFileName: "Document",
                 tessdataFolder: string.Empty
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>();
+            ));
         }
 
         [Fact]
         public void Constructor_InvalidTessdataFolder_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => new ScanConfiguration(
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:\\Scans",
                 baseFileName: "Document",
                 tessdataFolder: "Invalid|Folder"
-            );
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*invalid character*");
+            ));
+            Assert.Contains("invalid character", exception.Message);
         }
 
         #endregion
@@ -284,17 +247,17 @@ namespace Scandalous.Tests
             config.TessdataLanguageCode = "fra";
 
             // Assert
-            config.OutputFolder.Should().Be("C:\\NewScans");
-            config.OutputBaseFileName.Should().Be("NewDocument");
-            config.ColorMode.Should().Be(ScannerColorMode.BlackAndWhite);
-            config.DocumentOptions.Should().Be(DocumentOptions.Individual);
-            config.AutoDeskew.Should().BeFalse();
-            config.ExcludeBlankPages.Should().BeFalse();
-            config.ScanResolutionDPI.Should().Be(600);
-            config.ScannerPaperSource.Should().Be(ScannerPaperSource.Flatbed);
-            config.OcrEnabled.Should().BeTrue();
-            config.TessdataFolder.Should().Be("C:\\NewTessdata");
-            config.TessdataLanguageCode.Should().Be("fra");
+            Assert.Equal("C:\\NewScans", config.OutputFolder);
+            Assert.Equal("NewDocument", config.OutputBaseFileName);
+            Assert.Equal(ScannerColorMode.BlackAndWhite, config.ColorMode);
+            Assert.Equal(DocumentOptions.Individual, config.DocumentOptions);
+            Assert.False(config.AutoDeskew);
+            Assert.False(config.ExcludeBlankPages);
+            Assert.Equal(600, config.ScanResolutionDPI);
+            Assert.Equal(ScannerPaperSource.Flatbed, config.ScannerPaperSource);
+            Assert.True(config.OcrEnabled);
+            Assert.Equal("C:\\NewTessdata", config.TessdataFolder);
+            Assert.Equal("fra", config.TessdataLanguageCode);
         }
 
         #endregion
@@ -316,7 +279,7 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.ColorMode.Should().Be(colorMode);
+            Assert.Equal(colorMode, config.ColorMode);
         }
 
         [Theory]
@@ -333,7 +296,7 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.DocumentOptions.Should().Be(documentOptions);
+            Assert.Equal(documentOptions, config.DocumentOptions);
         }
 
         [Theory]
@@ -352,7 +315,7 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.ScannerPaperSource.Should().Be(paperSource);
+            Assert.Equal(paperSource, config.ScannerPaperSource);
         }
 
         #endregion
@@ -373,7 +336,7 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.OutputFolder.Should().Be(longPath);
+            Assert.Equal(longPath, config.OutputFolder);
         }
 
         [Fact]
@@ -390,7 +353,7 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.OutputBaseFileName.Should().Be(longName);
+            Assert.Equal(longName, config.OutputBaseFileName);
         }
 
         [Theory]
@@ -410,7 +373,7 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.ScanResolutionDPI.Should().Be(dpi);
+            Assert.Equal(dpi, config.ScanResolutionDPI);
         }
 
         [Theory]
@@ -430,7 +393,7 @@ namespace Scandalous.Tests
             );
 
             // Assert
-            config.TessdataLanguageCode.Should().Be(languageCode);
+            Assert.Equal(languageCode, config.TessdataLanguageCode);
         }
 
         #endregion

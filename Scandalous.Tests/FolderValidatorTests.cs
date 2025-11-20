@@ -1,4 +1,3 @@
-using FluentAssertions;
 using ScanUtility;
 using Xunit;
 
@@ -15,8 +14,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(null);
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("cannot be null");
+            Assert.False(isValid);
+            Assert.Contains("cannot be null", errorMessage);
         }
 
         [Fact]
@@ -26,8 +25,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(string.Empty);
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("cannot be null, empty");
+            Assert.False(isValid);
+            Assert.Contains("cannot be null, empty", errorMessage);
         }
 
         [Fact]
@@ -37,8 +36,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid("   ");
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("white-space");
+            Assert.False(isValid);
+            Assert.Contains("white-space", errorMessage);
         }
 
         #endregion
@@ -57,8 +56,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Theory]
@@ -71,8 +70,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Theory]
@@ -85,8 +84,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Theory]
@@ -98,8 +97,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Theory]
@@ -112,8 +111,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         #endregion
@@ -131,8 +130,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("invalid character");
+            Assert.False(isValid);
+            Assert.Contains("invalid character", errorMessage);
         }
 
         #endregion
@@ -149,8 +148,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("invalid character");
+            Assert.False(isValid);
+            Assert.Contains("invalid character", errorMessage);
         }
 
         #endregion
@@ -174,8 +173,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("reserved");
+            Assert.False(isValid);
+            Assert.Contains("reserved", errorMessage);
         }
 
         [Theory]
@@ -189,8 +188,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("reserved");
+            Assert.False(isValid);
+            Assert.Contains("reserved", errorMessage);
         }
 
         #endregion
@@ -208,8 +207,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("cannot end with a space or a period");
+            Assert.False(isValid);
+            Assert.Contains("cannot end with a space or a period", errorMessage);
         }
 
         #endregion
@@ -223,8 +222,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid("parent/./child");
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("'.' or '..' are not allowed");
+            Assert.False(isValid);
+            Assert.Contains("cannot end with a space or a period", errorMessage);
         }
 
         [Fact]
@@ -234,8 +233,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid("parent/../child");
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("'.' or '..' are not allowed");
+            Assert.False(isValid);
+            Assert.Contains("cannot end with a space or a period", errorMessage);
         }
 
         [Fact]
@@ -245,8 +244,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(".");
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("'.' or '..' are not allowed");
+            Assert.False(isValid);
+            Assert.Contains("cannot end with a space or a period", errorMessage);
         }
 
         [Fact]
@@ -256,8 +255,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid("..");
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("'.' or '..' are not allowed");
+            Assert.False(isValid);
+            Assert.Contains("cannot end with a space or a period", errorMessage);
         }
 
         #endregion
@@ -275,8 +274,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Fact]
@@ -290,9 +289,9 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeFalse();
-            errorMessage.Should().Contain("too long");
-            errorMessage.Should().Contain("255");
+            Assert.False(isValid);
+            Assert.Contains("too long", errorMessage);
+            Assert.Contains("255", errorMessage);
         }
 
         #endregion
@@ -309,8 +308,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Theory]
@@ -322,8 +321,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         #endregion
@@ -333,43 +332,32 @@ namespace Scandalous.Tests
         [Fact]
         public void Validate_ValidPath_DoesNotThrow()
         {
-            // Act
-            Action act = () => FolderValidator.Validate("ValidFolder");
-
-            // Assert
-            act.Should().NotThrow();
+            // Act & Assert
+            var exception = Record.Exception(() => FolderValidator.Validate("ValidFolder"));
+            Assert.Null(exception);
         }
 
         [Fact]
         public void Validate_InvalidPath_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => FolderValidator.Validate("Invalid|Folder");
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*invalid character*");
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => FolderValidator.Validate("Invalid|Folder"));
+            Assert.Contains("invalid character", exception.Message);
         }
 
         [Fact]
         public void Validate_NullPath_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => FolderValidator.Validate(null);
-
-            // Assert
-            act.Should().Throw<ArgumentException>();
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => FolderValidator.Validate(null));
         }
 
         [Fact]
         public void Validate_ReservedName_ThrowsArgumentException()
         {
-            // Act
-            Action act = () => FolderValidator.Validate("CON");
-
-            // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("*reserved*");
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentException>(() => FolderValidator.Validate("CON"));
+            Assert.Contains("reserved", exception.Message);
         }
 
         #endregion
@@ -385,8 +373,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Fact]
@@ -396,8 +384,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid("parent/child\\grandchild");
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Fact]
@@ -407,8 +395,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid("文档/数据");
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Theory]
@@ -421,8 +409,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         [Fact]
@@ -435,8 +423,8 @@ namespace Scandalous.Tests
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
 
             // Assert
-            isValid.Should().BeTrue();
-            errorMessage.Should().BeEmpty();
+            Assert.True(isValid);
+            Assert.Empty(errorMessage);
         }
 
         #endregion

@@ -73,10 +73,9 @@ Tests for the `ConfigurationManager` class that handles settings persistence.
 
 ## Technology Stack
 
-- **xUnit** 2.6.6 - Testing framework
-- **FluentAssertions** 6.12.0 - Fluent assertion library for readable tests
-- **Microsoft.NET.Test.Sdk** 17.8.0 - Test platform
-- **Moq** 4.20.70 - Mocking framework (available for future use)
+- **xUnit** 2.9.3 - Testing framework
+- **Microsoft.NET.Test.Sdk** 18.0.1 - Test platform
+- **Moq** 4.20.72 - Mocking framework (available for future use)
 
 ## Running the Tests
 
@@ -124,7 +123,7 @@ Potential areas for additional testing:
 
 When adding new tests:
 1. Follow the existing naming convention
-2. Use FluentAssertions for assertions
+2. Use standard xUnit assertions (Assert.Equal, Assert.True, Assert.Throws, etc.)
 3. Group related tests using regions (#region)
 4. Add Theory tests for multiple similar scenarios
 5. Include edge cases and boundary conditions

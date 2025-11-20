@@ -2,7 +2,7 @@
 
 namespace ScanUtility
 {
-    internal class ConfigurationManager
+    public class ConfigurationManager
     {
         private const string ConfigFileName = "ScanUtilityConfig.json";
         private readonly string _configFilePath;
