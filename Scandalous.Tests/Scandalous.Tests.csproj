@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Scandalous.Core\Scandalous.Core.csproj" />
     <ProjectReference Include="..\Scandalous\Scandalous.csproj" />
   </ItemGroup>
 

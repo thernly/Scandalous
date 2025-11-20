@@ -5,7 +5,7 @@ using Scandalous.Core.Models;
 using Scandalous.Core.Services;
 using System.Runtime.CompilerServices;
 
-namespace ScanUtility;
+namespace Scandalous;
 
 public partial class FormScan : Form
 {

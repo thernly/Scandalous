@@ -1,4 +1,4 @@
-using ScanUtility;
+using Scandalous.Core.Validation;
 using Xunit;
 
 namespace Scandalous.Tests
@@ -50,62 +50,18 @@ namespace Scandalous.Tests
         [InlineData("folder_name")]
         [InlineData("folder-123")]
         [InlineData("a")]
-        public void IsValid_ValidSimpleFolderName_ReturnsTrue(string folderName)
-        {
-            // Act
-            var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
-
-            // Assert
-            Assert.True(isValid);
-            Assert.Empty(errorMessage);
-        }
-
-        [Theory]
+        [InlineData("/")]
+        [InlineData("\\")]
         [InlineData("C:\\Users\\Documents")]
         [InlineData("C:\\Program Files\\MyApp")]
         [InlineData("D:\\Data\\Scans\\2024")]
-        public void IsValid_ValidAbsoluteWindowsPath_ReturnsTrue(string folderName)
-        {
-            // Act
-            var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
-
-            // Assert
-            Assert.True(isValid);
-            Assert.Empty(errorMessage);
-        }
-
-        [Theory]
         [InlineData("parent/child")]
         [InlineData("folder/subfolder/subsubfolder")]
         [InlineData("a/b/c/d")]
-        public void IsValid_ValidRelativePath_ReturnsTrue(string folderName)
-        {
-            // Act
-            var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
-
-            // Assert
-            Assert.True(isValid);
-            Assert.Empty(errorMessage);
-        }
-
-        [Theory]
-        [InlineData("/")]
-        [InlineData("\\")]
-        public void IsValid_RootPath_ReturnsTrue(string folderName)
-        {
-            // Act
-            var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
-
-            // Assert
-            Assert.True(isValid);
-            Assert.Empty(errorMessage);
-        }
-
-        [Theory]
         [InlineData("C:")]
         [InlineData("D:")]
         [InlineData("Z:")]
-        public void IsValid_DriveLetterOnly_ReturnsTrue(string folderName)
+        public void IsValid_Path_ReturnsTrue(string folderName)
         {
             // Act
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
@@ -114,7 +70,6 @@ namespace Scandalous.Tests
             Assert.True(isValid);
             Assert.Empty(errorMessage);
         }
-
         #endregion
 
         #region IsValid Tests - Invalid Characters in Path

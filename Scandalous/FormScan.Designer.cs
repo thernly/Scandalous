@@ -1,4 +1,4 @@
-﻿namespace ScanUtility
+﻿namespace Scandalous
 {
     partial class FormScan
     {

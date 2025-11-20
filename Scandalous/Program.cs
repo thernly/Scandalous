@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Scandalous.Core.Services;
 
-namespace ScanUtility
+namespace Scandalous
 {
     internal static class Program
     {
@@ -18,7 +18,7 @@ namespace ScanUtility
             // Set up dependency injection
             var services = new ServiceCollection();
             ConfigureServices(services);
-            
+
             using var serviceProvider = services.BuildServiceProvider();
             var formScan = serviceProvider.GetRequiredService<FormScan>();
             

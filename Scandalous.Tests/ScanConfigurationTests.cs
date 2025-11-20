@@ -1,4 +1,5 @@
-using ScanUtility;
+using Scandalous.Core.Enums;
+using Scandalous.Core.Models;
 using Xunit;
 
 namespace Scandalous.Tests
@@ -231,20 +232,21 @@ namespace Scandalous.Tests
         public void Properties_CanBeSetAndRetrieved()
         {
             // Arrange
-            var config = new ScanConfiguration();
-
-            // Act
-            config.OutputFolder = "C:\\NewScans";
-            config.OutputBaseFileName = "NewDocument";
-            config.ColorMode = ScannerColorMode.BlackAndWhite;
-            config.DocumentOptions = DocumentOptions.Individual;
-            config.AutoDeskew = false;
-            config.ExcludeBlankPages = false;
-            config.ScanResolutionDPI = 600;
-            config.ScannerPaperSource = ScannerPaperSource.Flatbed;
-            config.OcrEnabled = true;
-            config.TessdataFolder = "C:\\NewTessdata";
-            config.TessdataLanguageCode = "fra";
+            var config = new ScanConfiguration
+            {
+                // Act
+                OutputFolder = "C:\\NewScans",
+                OutputBaseFileName = "NewDocument",
+                ColorMode = ScannerColorMode.BlackAndWhite,
+                DocumentOptions = DocumentOptions.Individual,
+                AutoDeskew = false,
+                ExcludeBlankPages = false,
+                ScanResolutionDPI = 600,
+                ScannerPaperSource = ScannerPaperSource.Flatbed,
+                OcrEnabled = true,
+                TessdataFolder = "C:\\NewTessdata",
+                TessdataLanguageCode = "fra"
+            };
 
             // Assert
             Assert.Equal("C:\\NewScans", config.OutputFolder);

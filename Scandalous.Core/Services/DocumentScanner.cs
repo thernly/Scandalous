@@ -26,10 +26,7 @@ namespace Scandalous.Core.Services
         {
             ThrowIfDisposed();
 
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration));
-            }
+            ArgumentNullException.ThrowIfNull(configuration);
 
             if (string.IsNullOrWhiteSpace(configuration.OutputFolder))
             {
@@ -42,12 +39,7 @@ namespace Scandalous.Core.Services
             }
 
             var deviceList = await _scanController.GetDeviceList();
-            var device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName);
-            if (device is null)
-            {
-                throw new InvalidOperationException("The selected scanner is offline.");
-            }
-                
+            var device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName) ?? throw new InvalidOperationException("The selected scanner is offline.");
             var options = PrepareScanOptions(device, configuration);
             List<ProcessedImage> processedImages = [];
             var imageFiles = new List<string>();
@@ -82,7 +74,7 @@ namespace Scandalous.Core.Services
             var images = new List<ProcessedImage>();
             var tempFiles = new List<string>();
 
-            await foreach (var image in _scanController.Scan(scanOptions).WithCancellation(cancellationToken))
+            await foreach (var image in _scanController.Scan(scanOptions, cancellationToken).WithCancellation(cancellationToken))
             {
                 images.Add(image);
                 Guid guid = Guid.CreateVersion7();
@@ -209,10 +201,7 @@ namespace Scandalous.Core.Services
 
         private void ThrowIfDisposed()
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(nameof(DocumentScanner));
-            }
+            ObjectDisposedException.ThrowIf(_disposed, nameof(DocumentScanner));
         }
 
         // IDisposable Implementation
@@ -226,17 +215,9 @@ namespace Scandalous.Core.Services
         {
             if (_disposed) return;
 
-            if (disposing)
+            if (disposing && _scanningContext is IDisposable disposableContext)
             {
-                // Dispose managed state (managed objects).
-                // ScanController doesn't implement IDisposable
-                // _scanController?.Dispose();
-                
-                // Only dispose if ScanningContext implements IDisposable
-                if (_scanningContext is IDisposable disposableContext)
-                {
-                    disposableContext.Dispose();
-                }
+                disposableContext.Dispose();
             }
 
             // Free unmanaged resources (unmanaged objects) and override a finalizer below.
@@ -250,4 +231,4 @@ namespace Scandalous.Core.Services
             Dispose(false);
         }
     }
-} 
+}

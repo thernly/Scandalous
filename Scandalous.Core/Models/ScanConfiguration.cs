@@ -49,7 +49,7 @@ namespace Scandalous.Core.Models
         public string TessdataFolder { get; set; } = string.Empty; // Path to Tesseract's tessdata folder, if OCR is enabled
         public string TessdataLanguageCode { get; set; } = "eng"; // Default language code for Tesseract OCR
         public string SelectedScannerName { get; set; } = string.Empty;
-        public List<string> RecentFolders { get; set; } = new();
-        public List<string> RecentFiles { get; set; } = new();
+        public List<string> RecentFolders { get; set; } = [];
+        public List<string> RecentFiles { get; set; } = [];
     }
 } 

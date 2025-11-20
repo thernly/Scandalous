@@ -1,4 +1,4 @@
-using ScanUtility;
+using Scandalous.Core.Validation;
 using Xunit;
 
 namespace Scandalous.Tests
