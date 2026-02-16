@@ -16,6 +16,7 @@ public partial class FormScan : Form
     private readonly ILanguageCodeService _languageService;
     private readonly IScanExceptionHandler _exceptionHandler;
     private readonly List<string> _imageFileList;
+    private ScanConfiguration _scanConfiguration;
 
     public FormScan(
         IDocumentScanner scanner, 
@@ -100,11 +101,13 @@ public partial class FormScan : Form
 
     private async Task LoadScannerList()
     {
+        lstScanners.Items.Clear();
         var devices = await _scanner.GetScanDevicesAsync();
         foreach (var device in devices)
         {
             lstScanners.Items.Add(device.Name);
         }
+        await SetSelectedScanner();
     }
 
     private void PrepareForScan()
@@ -167,12 +170,17 @@ public partial class FormScan : Form
 
     private async void FormScan_Load(object sender, EventArgs e)
     {
+        _scanConfiguration = await _configManager.LoadConfigurationAsync();
         await LoadScannerList();
-        var scanConfiguration = await _configManager.LoadConfigurationAsync();
-        ApplyConfigurationToUI(scanConfiguration);
-        if (lstScanners.Items.Count > 0 && !string.IsNullOrEmpty(scanConfiguration.SelectedScannerName))
+        ApplyConfigurationToUI(_scanConfiguration);
+        await SetSelectedScanner();
+    }
+
+    private async Task SetSelectedScanner()
+    {
+        if (lstScanners.Items.Count > 0 && !string.IsNullOrEmpty(_scanConfiguration.SelectedScannerName))
         {
-            lstScanners.SelectedItem = scanConfiguration.SelectedScannerName;
+            lstScanners.SelectedItem = _scanConfiguration.SelectedScannerName;
         }
         else if (lstScanners.Items.Count > 0)
         {
