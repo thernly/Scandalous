@@ -128,7 +128,7 @@ namespace Scandalous.Core.Tests.Services
             var configManager = new TestableConfigurationManager(tempFile);
             
             // Write corrupted JSON
-            await File.WriteAllTextAsync(tempFile, "{ invalid json content }");
+            await File.WriteAllTextAsync(tempFile, "{ invalid json content }", TestContext.Current.CancellationToken);
 
             // Act
             var result = await configManager.LoadConfigurationAsync();
@@ -148,7 +148,7 @@ namespace Scandalous.Core.Tests.Services
             var configManager = new TestableConfigurationManager(tempFile);
             
             // Write empty file
-            await File.WriteAllTextAsync(tempFile, "");
+            await File.WriteAllTextAsync(tempFile, "", TestContext.Current.CancellationToken);
 
             // Act
             var result = await configManager.LoadConfigurationAsync();
@@ -168,7 +168,7 @@ namespace Scandalous.Core.Tests.Services
             var configManager = new TestableConfigurationManager(tempFile);
             
             // Write partial JSON with properly escaped backslashes
-            await File.WriteAllTextAsync(tempFile, "{ \"outputFolder\": \"C:\\\\Test\" }");
+            await File.WriteAllTextAsync(tempFile, "{ \"outputFolder\": \"C:\\\\Test\" }", TestContext.Current.CancellationToken);
 
             // Act
             var result = await configManager.LoadConfigurationAsync();
@@ -251,7 +251,7 @@ namespace Scandalous.Core.Tests.Services
             var configManager = new TestableConfigurationManager(tempFile);
             
             // Write content to the file first
-            await File.WriteAllTextAsync(tempFile, "{}");
+            await File.WriteAllTextAsync(tempFile, "{}", TestContext.Current.CancellationToken);
             
             // Then lock the file
             using var fileStream = File.Open(tempFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
@@ -427,7 +427,7 @@ namespace Scandalous.Core.Tests.Services
             var configManager = new TestableConfigurationManager(tempFile);
             
             // Write malformed JSON with properly escaped backslashes
-            await File.WriteAllTextAsync(tempFile, "{ \"outputFolder\": \"C:\\\\Test\", \"colorMode\": \"InvalidValue\" }");
+            await File.WriteAllTextAsync(tempFile, "{ \"outputFolder\": \"C:\\\\Test\", \"colorMode\": \"InvalidValue\" }", TestContext.Current.CancellationToken);
 
             // Act
             var result = await configManager.LoadConfigurationAsync();

@@ -176,7 +176,8 @@ namespace Scandalous.Core.Tests.Models
             // Arrange & Act & Assert
             var config = new ScanConfiguration(
                 outputFolder: "C:/valid-folder",
-                baseFileName: "valid-file"
+                baseFileName: "valid-file",
+                tessdataFolder: "C:/tessdata"
             );
 
             Assert.Equal("C:/valid-folder", config.OutputFolder);
@@ -278,7 +279,8 @@ namespace Scandalous.Core.Tests.Models
             var config = new ScanConfiguration(
                 outputFolder: "C:/test",
                 baseFileName: "test",
-                scanResolutionDpi: dpi
+                scanResolutionDpi: dpi,
+                tessdataFolder: "C:/tessdata"
             );
 
             // Assert
@@ -382,7 +384,8 @@ namespace Scandalous.Core.Tests.Models
                 var config = new ScanConfiguration(
                     outputFolder: "C:/test",
                     baseFileName: "test",
-                    colorMode: colorMode
+                    colorMode: colorMode,
+                    tessdataFolder: "C:/tessdata"
                 );
                 Assert.Equal(colorMode, config.ColorMode);
             }
@@ -393,7 +396,8 @@ namespace Scandalous.Core.Tests.Models
                 var config = new ScanConfiguration(
                     outputFolder: "C:/test",
                     baseFileName: "test",
-                    documentOptions: documentOption
+                    documentOptions: documentOption,
+                    tessdataFolder: "C:/tessdata"
                 );
                 Assert.Equal(documentOption, config.DocumentOptions);
             }
@@ -404,7 +408,8 @@ namespace Scandalous.Core.Tests.Models
                 var config = new ScanConfiguration(
                     outputFolder: "C:/test",
                     baseFileName: "test",
-                    scannerPaperSource: paperSource
+                    scannerPaperSource: paperSource,
+                    tessdataFolder: "C:/tessdata"
                 );
                 Assert.Equal(paperSource, config.ScannerPaperSource);
             }
@@ -493,7 +498,8 @@ namespace Scandalous.Core.Tests.Models
             // Arrange
             var config = new ScanConfiguration(
                 outputFolder: "C:/test",
-                baseFileName: "test"
+                baseFileName: "test",
+                tessdataFolder: "C:/tessdata"
             );
 
             // Act

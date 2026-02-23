@@ -1,10 +1,5 @@
-using NSubstitute;
-using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
 using Scandalous.Core.Services;
-using System.Threading.Tasks;
-using Xunit;
-using System.IO;
 
 namespace Scandalous.Core.Tests.Services
 {
@@ -41,6 +36,8 @@ namespace Scandalous.Core.Tests.Services
             {
                 // Ignore cleanup errors
             }
+            
+            GC.SuppressFinalize(this);
         }
 
         #region Event Handling Tests
@@ -80,10 +77,14 @@ namespace Scandalous.Core.Tests.Services
             EventHandler<PageScannedEventArgs> handler2 = (sender, e) => { };
 
             // Act
-            _scanner.PageScanned += handler1;
-            _scanner.PageScanned += handler2;
+            var exception = Record.Exception(() =>
+            {
+                _scanner.PageScanned += handler1;
+                _scanner.PageScanned += handler2;
+            });
 
-            // Assert - No exception should be thrown
+            // Assert
+            Assert.Null(exception);
 
             // Cleanup
             _scanner.PageScanned -= handler1;
@@ -118,10 +119,14 @@ namespace Scandalous.Core.Tests.Services
 
             // Act
             _scanner.PageScanned += handler;
-            _scanner.PageScanned -= handler;
-            _scanner.PageScanned -= handler; // Unsubscribe again
+            var exception = Record.Exception(() =>
+            {
+                _scanner.PageScanned -= handler;
+                _scanner.PageScanned -= handler; // Unsubscribe again
+            });
 
-            // Assert - No exception should be thrown
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -130,8 +135,14 @@ namespace Scandalous.Core.Tests.Services
             // Arrange
             EventHandler<PageScannedEventArgs> handler = (sender, e) => { };
 
-            // Act & Assert - Should not throw
-            _scanner.PageScanned -= handler;
+            // Act
+            var exception = Record.Exception(() =>
+            {
+                _scanner.PageScanned -= handler;
+            });
+
+            // Assert
+            Assert.Null(exception);
         }
 
         #endregion
@@ -144,10 +155,16 @@ namespace Scandalous.Core.Tests.Services
             // Arrange
             var scanner = new DocumentScanner();
 
-            // Act & Assert
-            scanner.Dispose();
-            scanner.Dispose(); // Should not throw
-            scanner.Dispose(); // Should not throw
+            // Act
+            var exception = Record.Exception(() =>
+            {
+                scanner.Dispose();
+                scanner.Dispose();
+                scanner.Dispose();
+            });
+
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -156,8 +173,11 @@ namespace Scandalous.Core.Tests.Services
             // Arrange
             var scanner = new DocumentScanner();
 
-            // Act & Assert
-            scanner.Dispose(); // Should not throw
+            // Act
+            var exception = Record.Exception(() => scanner.Dispose());
+
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -167,8 +187,11 @@ namespace Scandalous.Core.Tests.Services
             var scanner = new DocumentScanner();
             scanner.Dispose();
 
-            // Act & Assert
-            scanner.Dispose(); // Should not throw
+            // Act
+            var exception = Record.Exception(() => scanner.Dispose());
+
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -178,8 +201,11 @@ namespace Scandalous.Core.Tests.Services
             var scanner = new DocumentScanner();
             scanner.PageScanned += (sender, e) => { };
 
-            // Act & Assert
-            scanner.Dispose(); // Should not throw
+            // Act
+            var exception = Record.Exception(() => scanner.Dispose());
+
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -191,8 +217,11 @@ namespace Scandalous.Core.Tests.Services
             scanner.PageScanned += (sender, e) => { };
             scanner.PageScanned += (sender, e) => { };
 
-            // Act & Assert
-            scanner.Dispose(); // Should not throw
+            // Act
+            var exception = Record.Exception(() => scanner.Dispose());
+
+            // Assert
+            Assert.Null(exception);
         }
 
         [Fact]
@@ -205,8 +234,11 @@ namespace Scandalous.Core.Tests.Services
             scanner.PageScanned += handler;
             scanner.PageScanned -= handler;
 
-            // Act & Assert
-            scanner.Dispose(); // Should not throw
+            // Act
+            var exception = Record.Exception(() => scanner.Dispose());
+
+            // Assert
+            Assert.Null(exception);
         }
 
         #endregion
@@ -220,7 +252,7 @@ namespace Scandalous.Core.Tests.Services
             var scanner = new DocumentScanner();
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => scanner.ScanDocuments(null!));
+            var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => scanner.ScanDocuments(null!, TestContext.Current.CancellationToken));
             Assert.Equal("configuration", exception.ParamName);
         }
 
@@ -236,7 +268,7 @@ namespace Scandalous.Core.Tests.Services
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig, TestContext.Current.CancellationToken));
             Assert.Contains("Output folder cannot be null, empty, or whitespace", exception.Message);
         }
 
@@ -252,7 +284,7 @@ namespace Scandalous.Core.Tests.Services
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig, TestContext.Current.CancellationToken));
             Assert.Contains("Output folder cannot be null, empty, or whitespace", exception.Message);
         }
 
@@ -268,7 +300,7 @@ namespace Scandalous.Core.Tests.Services
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig, TestContext.Current.CancellationToken));
             Assert.Contains("Output base file name cannot be null, empty, or whitespace", exception.Message);
         }
 
@@ -284,7 +316,7 @@ namespace Scandalous.Core.Tests.Services
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig, TestContext.Current.CancellationToken));
             Assert.Contains("Output base file name cannot be null, empty, or whitespace", exception.Message);
         }
 
@@ -300,7 +332,7 @@ namespace Scandalous.Core.Tests.Services
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig, TestContext.Current.CancellationToken));
             Assert.Contains("Output folder cannot be null, empty, or whitespace", exception.Message);
         }
 
@@ -316,7 +348,7 @@ namespace Scandalous.Core.Tests.Services
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig));
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scanner.ScanDocuments(invalidConfig, TestContext.Current.CancellationToken));
             Assert.Contains("Output base file name cannot be null, empty, or whitespace", exception.Message);
         }
 
@@ -333,7 +365,7 @@ namespace Scandalous.Core.Tests.Services
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ObjectDisposedException>(() => scanner.ScanDocuments(config));
+            var exception = await Assert.ThrowsAsync<ObjectDisposedException>(() => scanner.ScanDocuments(config, TestContext.Current.CancellationToken));
             Assert.Equal(nameof(DocumentScanner), exception.ObjectName);
         }
 
@@ -460,4 +492,4 @@ namespace Scandalous.Core.Tests.Services
 
         #endregion
     }
-} 
+}         

@@ -28,11 +28,7 @@ namespace Scandalous.Core.Models
             this.ScannerPaperSource = scannerPaperSource;
             
             OcrEnabled = ocrEnabled;
-            // Only validate tessdataFolder if it's not empty
-            if (!string.IsNullOrWhiteSpace(tessdataFolder))
-            {
-                FolderValidator.Validate(tessdataFolder);
-            }
+            FolderValidator.Validate(tessdataFolder);
             TessdataFolder = tessdataFolder;
             TessdataLanguageCode = languageCode;
             SelectedScannerName = selectedScannerName;
