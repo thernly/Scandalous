@@ -46,7 +46,7 @@ namespace Scandalous.Core.Services
 
             try
             {
-                (processedImages, imageFiles) = await PerformScanning(options, configuration.OutputFolder, cancellationToken);
+                (processedImages, imageFiles) = await PerformScanning(options, cancellationToken);
 
                 if (processedImages.Count > 0)
                 {
@@ -55,7 +55,7 @@ namespace Scandalous.Core.Services
             }
             finally
             {
-                CleanUpImageFiles(imageFiles, configuration.OutputFolder);
+                CleanUpImageFiles(imageFiles);
                 DisposeImages(processedImages);
             }
         }
@@ -69,16 +69,17 @@ namespace Scandalous.Core.Services
             return options;
         }
 
-        private async Task<(List<ProcessedImage> scannedImages, List<string> tempFiles)> PerformScanning(ScanOptions scanOptions, string outputFolder, CancellationToken cancellationToken)
+        private async Task<(List<ProcessedImage> scannedImages, List<string> tempFiles)> PerformScanning(ScanOptions scanOptions, CancellationToken cancellationToken)
         {
             var images = new List<ProcessedImage>();
             var tempFiles = new List<string>();
+            var tempFolder = Path.GetTempPath();
 
             await foreach (var image in _scanController.Scan(scanOptions, cancellationToken).WithCancellation(cancellationToken))
             {
                 images.Add(image);
                 Guid guid = Guid.CreateVersion7();
-                var outputFile = Path.Combine(outputFolder, $"scan-{guid}.png");
+                var outputFile = Path.Combine(tempFolder, $"scan-{guid}.png");
                 tempFiles.Add(outputFile);
                 image.Save(outputFile, ImageFileFormat.Png);
                 OnPageScanned(outputFile);
@@ -122,16 +123,15 @@ namespace Scandalous.Core.Services
             }
         }
 
-        private static void CleanUpImageFiles(IList<string> imageFiles, string folder)
+        private static void CleanUpImageFiles(IList<string> imageFiles)
         {
             foreach (var file in imageFiles)
             {
                 try
                 {
-                    var filePath = Path.Combine(folder, file);
-                    if (File.Exists(filePath))
+                    if (File.Exists(file))
                     {
-                        File.Delete(filePath);
+                        File.Delete(file);
                     }
                 }
                 catch (IOException ex)
