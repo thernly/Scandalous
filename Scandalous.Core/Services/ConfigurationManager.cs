@@ -89,16 +89,26 @@ namespace Scandalous.Core.Services
             {
                 return new List<string>();
             }
-            var languageFiles = Directory.GetFiles(tessdataFolder, "*.traineddata", SearchOption.TopDirectoryOnly);
+
             var languageCodes = new List<string>();
-            foreach (var file in languageFiles)
+            try
             {
-                var fileName = Path.GetFileNameWithoutExtension(file);
-                if (!string.IsNullOrWhiteSpace(fileName))
+                var languageFiles = Directory.GetFiles(tessdataFolder, "*.traineddata", SearchOption.TopDirectoryOnly);
+                foreach (var file in languageFiles)
                 {
-                    languageCodes.Add(fileName);
+                    var fileName = Path.GetFileNameWithoutExtension(file);
+                    if (!string.IsNullOrWhiteSpace(fileName))
+                    {
+                        languageCodes.Add(fileName);
+                    }
                 }
             }
+            catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException)
+            {
+                // Surface an empty list on IO exceptions
+                return new List<string>();
+            }
+
             return languageCodes;
         }
 
