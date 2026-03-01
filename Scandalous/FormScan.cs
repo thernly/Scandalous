@@ -157,7 +157,7 @@ public partial class FormScan : Form
                 var pdfFilePath = _pdfService.GetPdfFilePath(scanConfiguration);
                 if (_pdfService.PdfFileExists(pdfFilePath))
                 {
-                    _pdfService.OpenPdfFile(pdfFilePath);
+                    _pdfService.OpenPdfFile(pdfFilePath, scanConfiguration.OutputFolder);
                 }
             }
             catch (Exception ex)

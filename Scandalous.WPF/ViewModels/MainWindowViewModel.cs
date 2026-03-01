@@ -513,7 +513,7 @@ namespace Scandalous.WPF.ViewModels
                 var pdfFilePath = _pdfService.GetPdfFilePath(scanConfiguration);
                 if (_pdfService.PdfFileExists(pdfFilePath))
                 {
-                    _pdfService.OpenPdfFile(pdfFilePath);
+                    _pdfService.OpenPdfFile(pdfFilePath, scanConfiguration.OutputFolder);
                     StatusMessage = "PDF opened successfully";
                     OutputSettingsViewModel.RecentFiles.Insert(0, pdfFilePath);
                     if (OutputSettingsViewModel.RecentFiles.Count > 5)

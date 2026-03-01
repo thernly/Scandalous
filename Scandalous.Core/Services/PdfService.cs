@@ -9,13 +9,31 @@ namespace Scandalous.Core.Services
             return Path.Combine(configuration.OutputFolder, $"{configuration.OutputBaseFileName}.pdf");
         }
 
-        public void OpenPdfFile(string pdfFilePath)
+        public void OpenPdfFile(string pdfFilePath, string expectedOutputFolder)
         {
+            var fullPdfPathParam = Path.GetFullPath(pdfFilePath);
+            var fullOutputDir = Path.GetFullPath(expectedOutputFolder);
+
+            if (!fullOutputDir.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                fullOutputDir += Path.DirectorySeparatorChar;
+            }
+
+            if (!fullPdfPathParam.StartsWith(fullOutputDir, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Calculated path does not reside in the expected output directory.");
+            }
+
+            if (!Path.GetExtension(fullPdfPathParam).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Execution target is not a valid PDF file.");
+            }
+
             try
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = pdfFilePath,
+                    FileName = fullPdfPathParam,
                     UseShellExecute = true,
                     Verb = "open"
                 });
