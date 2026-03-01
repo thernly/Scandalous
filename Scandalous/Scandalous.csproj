@@ -44,4 +44,10 @@
     <ProjectReference Include="..\Scandalous.Core\Scandalous.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="ThirdPartyNotices.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
