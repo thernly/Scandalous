@@ -46,7 +46,9 @@ namespace Scandalous.Core.Services
             }
 
             var json = JsonSerializer.Serialize(configuration, CachedJsonSerializerOptions);
-            await File.WriteAllTextAsync(_configFilePath, json);
+            var tempFilePath = $"{_configFilePath}.{Guid.NewGuid():N}.tmp";
+            await File.WriteAllTextAsync(tempFilePath, json);
+            File.Move(tempFilePath, _configFilePath, overwrite: true);
         }
 
         public async Task<ScanConfiguration> LoadConfigurationAsync()
@@ -119,7 +121,9 @@ namespace Scandalous.Core.Services
             }
 
             var json = JsonSerializer.Serialize(windowState, CachedJsonSerializerOptions);
-            await File.WriteAllTextAsync(windowStateFilePath, json);
+            var tempFilePath = $"{windowStateFilePath}.{Guid.NewGuid():N}.tmp";
+            await File.WriteAllTextAsync(tempFilePath, json);
+            File.Move(tempFilePath, windowStateFilePath, overwrite: true);
         }
 
         public async Task<WindowStateInfo?> LoadWindowStateAsync()
