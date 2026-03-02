@@ -148,3 +148,5 @@ The application incorporates validators to ensure robust handling of user inputs
 *   `FileNameValidator.cs`: A static utility class providing methods to validate file names against common operating system and file system rules.
 *   `FolderValidator.cs`: A static utility class providing methods to validate folder names/paths.
 
+## License
+© 2025-2026 Thomas Hernly. Released under GNU General Public License v3.0. See LICENSE file for details.
