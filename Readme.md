@@ -2,7 +2,7 @@
 
 ## Overview
 
-Scandalous is a Windows Forms application for scanning documents using TWAIN/WIA compatible scanners. It leverages the NAPS2.Sdk to interact with scanning devices, process images, and export them as PDF files. The application provides a modern, user-friendly interface to configure scan settings, preview scanned pages, and manage output files.
+Scandalous is a desktop application (with Windows Forms and WPF interfaces) for scanning documents using TWAIN/WIA compatible scanners. It leverages the NAPS2.Sdk to interact with scanning devices, process images, and export them as PDF files. The application provides a modern, user-friendly interface to configure scan settings, preview scanned pages, and manage output files.
 
 ## Features
 
@@ -137,8 +137,10 @@ The application incorporates validators to ensure robust handling of user inputs
 
 ## Project Structure (Key Components)
 
-*   `Scandalous.csproj`: The C# project file, defining target framework (.NET 10), dependencies, and build settings.
-*   `Program.cs`: The main entry point for the Windows Forms application.
+*   `Scandalous.Core.csproj`: A class library containing the core logic, services, validators, and configuration for scanning operations.
+*   `Scandalous.csproj`: The Windows Forms application project, defining target framework (.NET 10), dependencies, and build settings for the WinForms UI.
+*   `Scandalous.WPF.csproj`: The Windows Presentation Foundation application project, providing an alternative modern UI.
+*   `Program.cs`: The main entry points for the desktop applications.
 *   `FormScan.cs`: Implements the user interface, event handling, and orchestrates the scanning process based on user input.
 *   `DocumentScanner.cs`: Contains the core logic for interacting with scanners via `NAPS2.Sdk`. It handles device discovery, scan execution, image processing, PDF export, and OCR integration.
 *   `ScanConfiguration.cs`: A data class that holds all configuration parameters for a scan operation.
