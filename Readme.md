@@ -34,11 +34,13 @@ Scandalous is a Windows Forms application for scanning documents using TWAIN/WIA
 
 ## Prerequisites
 
-*   .NET 9 Runtime.
+*   .NET 10 Runtime.
 *   A TWAIN or WIA compatible scanner with its drivers installed on the system.
 *   Dependencies (managed via NuGet):
+    *   `Microsoft.Extensions.DependencyInjection`
     *   `NAPS2.Sdk`
     *   `NAPS2.Images.Gdi`
+    *   `NAPS2.Tesseract.Binaries`
 
 ## OCR Requirements
 
@@ -135,7 +137,7 @@ The application incorporates validators to ensure robust handling of user inputs
 
 ## Project Structure (Key Components)
 
-*   `Scandalous.csproj`: The C# project file, defining target framework (.NET 9), dependencies, and build settings.
+*   `Scandalous.csproj`: The C# project file, defining target framework (.NET 10), dependencies, and build settings.
 *   `Program.cs`: The main entry point for the Windows Forms application.
 *   `FormScan.cs`: Implements the user interface, event handling, and orchestrates the scanning process based on user input.
 *   `DocumentScanner.cs`: Contains the core logic for interacting with scanners via `NAPS2.Sdk`. It handles device discovery, scan execution, image processing, PDF export, and OCR integration.
