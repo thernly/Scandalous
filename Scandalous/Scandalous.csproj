@@ -9,9 +9,9 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
     <PlatformTarget>x64</PlatformTarget>
     <ApplicationIcon>Scandalous-app-icon.ico</ApplicationIcon>
-    <Version>1.1.0</Version>
-    <FileVersion>1.1.0</FileVersion>
-    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <Version>1.2.0</Version>
+    <FileVersion>1.2.0</FileVersion>
+    <AssemblyVersion>1.2.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
     <PackageReference Include="NAPS2.Images.Gdi" Version="1.2.1" />
     <PackageReference Include="NAPS2.Sdk" Version="1.2.1" />
     <PackageReference Include="NAPS2.Tesseract.Binaries" Version="1.4.0" />

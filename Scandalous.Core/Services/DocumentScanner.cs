@@ -22,7 +22,7 @@ namespace Scandalous.Core.Services
             _scanController = new ScanController(_scanningContext);
         }
 
-        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default)
+        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
         {
             ThrowIfDisposed();
 
@@ -47,7 +47,21 @@ namespace Scandalous.Core.Services
             string outputPath = string.Empty;
             try
             {
-                (processedImages, imageFiles) = await PerformScanning(options, cancellationToken);
+                (var batch, var batchFiles) = await PerformScanning(options, cancellationToken);
+                processedImages.AddRange(batch);
+                imageFiles.AddRange(batchFiles);
+
+                bool isFlatbedCombined = configuration.ScannerPaperSource == ScannerPaperSource.Flatbed
+                    && configuration.DocumentOptions == DocumentOptions.Combined
+                    && promptForMorePages != null;
+
+                while (isFlatbedCombined && await promptForMorePages!())
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    (var moreBatch, var moreBatchFiles) = await PerformScanning(options, cancellationToken);
+                    processedImages.AddRange(moreBatch);
+                    imageFiles.AddRange(moreBatchFiles);
+                }
 
                 if (processedImages.Count > 0)
                 {

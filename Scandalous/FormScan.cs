@@ -60,7 +60,18 @@ public partial class FormScan : Form
         try
         {
             PrepareForScan();
-            outputPath = await _scanner.ScanDocuments(scanConfiguration);
+            Func<Task<bool>>? promptForMorePages = null;
+            if (scanConfiguration.ScannerPaperSource == ScannerPaperSource.Flatbed
+                && scanConfiguration.DocumentOptions == DocumentOptions.Combined)
+            {
+                promptForMorePages = () => Task.FromResult(
+                    MessageBox.Show(
+                        "Place the next page on the flatbed and click Yes, or click No to finish.",
+                        "More Pages?",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question) == DialogResult.Yes);
+            }
+            outputPath = await _scanner.ScanDocuments(scanConfiguration, promptForMorePages: promptForMorePages);
             LabelStatus.Text = "Scanning completed.";
         }
         catch (Exception ex)
