@@ -3,7 +3,7 @@
 ; Non-commercial use only
 
 #define MyAppName "Scandalous"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "T. Hernly"
 #define MyAppURL "https://github.com/thernly/Scandalous"
 #define MyAppExeName "Scandalous.exe"
