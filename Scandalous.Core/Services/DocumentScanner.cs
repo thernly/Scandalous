@@ -22,7 +22,7 @@ namespace Scandalous.Core.Services
             _scanController = new ScanController(_scanningContext);
         }
 
-        public async Task ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default)
+        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
 
@@ -44,13 +44,14 @@ namespace Scandalous.Core.Services
             List<ProcessedImage> processedImages = [];
             var imageFiles = new List<string>();
 
+            string outputPath = string.Empty;
             try
             {
                 (processedImages, imageFiles) = await PerformScanning(options, cancellationToken);
 
                 if (processedImages.Count > 0)
                 {
-                    await ExportImagesToPdfAsync(configuration, processedImages, cancellationToken);
+                    outputPath = await ExportImagesToPdfAsync(configuration, processedImages, cancellationToken);
                 }
             }
             finally
@@ -58,6 +59,7 @@ namespace Scandalous.Core.Services
                 CleanUpImageFiles(imageFiles);
                 DisposeImages(processedImages);
             }
+            return outputPath;
         }
 
         private static ScanOptions PrepareScanOptions(ScanDevice device, ScanConfiguration configuration)
@@ -87,7 +89,7 @@ namespace Scandalous.Core.Services
             return (images, tempFiles);
         }
 
-        private async Task ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
+        private async Task<string> ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
         {
             if (configuration.OcrEnabled)
             {
@@ -96,18 +98,35 @@ namespace Scandalous.Core.Services
             var pdfExporter = new PdfExporter(_scanningContext);
             if (configuration.DocumentOptions == DocumentOptions.Combined)
             {
-                var outputFile = Path.Combine(configuration.OutputFolder, $"{configuration.OutputBaseFileName}.pdf");
+                var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
                 await ExportPdfAsync(pdfExporter, outputFile, processedImages, configuration.OcrEnabled);
+                return outputFile;
             }
             else
             {
                 foreach (var image in processedImages)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var individualPdfName = $"{configuration.OutputBaseFileName}-{Guid.NewGuid()}.pdf";
-                    var outputFile = Path.Combine(configuration.OutputFolder, individualPdfName);
+                    var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
                     await ExportPdfAsync(pdfExporter, outputFile, [image], configuration.OcrEnabled);
                 }
+                return string.Empty;
+            }
+        }
+
+        private static string GetAvailableFilePath(string folder, string baseName)
+        {
+            var candidate = Path.Combine(folder, $"{baseName}.pdf");
+            if (!File.Exists(candidate))
+                return candidate;
+
+            int counter = 2;
+            while (true)
+            {
+                candidate = Path.Combine(folder, $"{baseName}_{counter}.pdf");
+                if (!File.Exists(candidate))
+                    return candidate;
+                counter++;
             }
         }
 
@@ -201,7 +220,8 @@ namespace Scandalous.Core.Services
 
         private void ThrowIfDisposed()
         {
-            ObjectDisposedException.ThrowIf(_disposed, nameof(DocumentScanner));
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(DocumentScanner));
         }
 
         // IDisposable Implementation

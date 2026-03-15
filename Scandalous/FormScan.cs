@@ -56,10 +56,11 @@ public partial class FormScan : Form
             return;
         }
 
+        var outputPath = string.Empty;
         try
         {
             PrepareForScan();
-            await _scanner.ScanDocuments(scanConfiguration);
+            outputPath = await _scanner.ScanDocuments(scanConfiguration);
             LabelStatus.Text = "Scanning completed.";
         }
         catch (Exception ex)
@@ -72,7 +73,7 @@ public partial class FormScan : Form
             Cursor = Cursors.Default;
         }
         
-        ShowPDF(scanConfiguration);
+        ShowPDF(scanConfiguration, outputPath);
     }
 
     private UIState BuildUIStateFromControls()
@@ -148,16 +149,15 @@ public partial class FormScan : Form
         await LoadScannerList();
     }
 
-    private void ShowPDF(ScanConfiguration scanConfiguration)
+    private void ShowPDF(ScanConfiguration scanConfiguration, string outputPath)
     {
         if (scanConfiguration.DocumentOptions == DocumentOptions.Combined)
         {
             try
             {
-                var pdfFilePath = _pdfService.GetPdfFilePath(scanConfiguration);
-                if (_pdfService.PdfFileExists(pdfFilePath))
+                if (_pdfService.PdfFileExists(outputPath))
                 {
-                    _pdfService.OpenPdfFile(pdfFilePath, scanConfiguration.OutputFolder);
+                    _pdfService.OpenPdfFile(outputPath, scanConfiguration.OutputFolder);
                 }
             }
             catch (Exception ex)
