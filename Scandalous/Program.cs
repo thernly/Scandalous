@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using NAPS2.Images.Gdi;
 using Scandalous.Core.Services;
 
 namespace Scandalous
@@ -28,7 +29,7 @@ namespace Scandalous
         private static void ConfigureServices(IServiceCollection services)
         {
             // Register services
-            services.AddSingleton<IDocumentScanner, DocumentScanner>();
+            services.AddSingleton<IDocumentScanner>(sp => new DocumentScanner(new GdiImageContext()));
             services.AddSingleton<IConfigurationManager, ConfigurationManager>();
             services.AddSingleton<IScanConfigurationMapper, ScanConfigurationMapper>();
             services.AddSingleton<IPdfService, PdfService>();
