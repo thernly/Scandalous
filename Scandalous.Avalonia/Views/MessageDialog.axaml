@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Scandalous.Avalonia.Views.MessageDialog"
+        Title="Scandalous"
+        Width="400" Height="200"
+        MinWidth="300" MinHeight="150"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+    <Grid RowDefinitions="*,Auto" Margin="20">
+        <TextBlock Grid.Row="0"
+                   Name="MessageText"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Center" />
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button Name="YesButton" Content="Yes" MinWidth="75" Click="YesButton_Click" />
+            <Button Name="NoButton" Content="No" MinWidth="75" Click="NoButton_Click" />
+            <Button Name="OkButton" Content="OK" MinWidth="75" Click="OkButton_Click" IsVisible="False" />
+        </StackPanel>
+    </Grid>
+</Window>
