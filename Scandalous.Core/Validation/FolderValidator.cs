@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Scandalous.Core.Validation
 {
     public static class FolderValidator
@@ -71,15 +73,18 @@ namespace Scandalous.Core.Validation
 
                 // Special handling for drive letters (e.g., "C:") as the first segment of a rooted path.
                 // These are valid path roots but contain ':', which is an invalid char for general segment names.
-                if (i == 0 && segment.Length == 2 && segment[1] == ':' && char.IsLetter(segment[0]))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    // Check if the drive letter segment itself ends with space/period (e.g., "C: ").
-                    if (segment.EndsWith(' ') || segment.EndsWith('.'))
+                    if (i == 0 && segment.Length == 2 && segment[1] == ':' && char.IsLetter(segment[0]))
                     {
-                        return (false, $"Drive letter segment '{segment}' in '{folderName}' cannot end with a space or a period.");
+                        // Check if the drive letter segment itself ends with space/period (e.g., "C: ").
+                        if (segment.EndsWith(' ') || segment.EndsWith('.'))
+                        {
+                            return (false, $"Drive letter segment '{segment}' in '{folderName}' cannot end with a space or a period.");
+                        }
+                        // Drive letter is valid, continue to the next segment if any.
+                        continue;
                     }
-                    // Drive letter is valid, continue to the next segment if any.
-                    continue;
                 }
 
                 // Rule: Check for invalid characters within this specific segment.
@@ -91,9 +96,12 @@ namespace Scandalous.Core.Validation
                 }
 
                 // Rule: Check for reserved names (case-insensitive).
-                if (ReservedNamesInternal.Any(rn => rn.Equals(segment, StringComparison.OrdinalIgnoreCase)))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    return (false, $"Path segment '{segment}' in '{folderName}' is a reserved system name.");
+                    if (ReservedNamesInternal.Any(rn => rn.Equals(segment, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return (false, $"Path segment '{segment}' in '{folderName}' is a reserved system name.");
+                    }
                 }
 
                 // Rule: Segment cannot end with a space or a period.
