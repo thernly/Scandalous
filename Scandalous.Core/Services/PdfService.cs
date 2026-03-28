@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Scandalous.Core.Models;
 
 namespace Scandalous.Core.Services
@@ -31,12 +32,23 @@ namespace Scandalous.Core.Services
 
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    FileName = fullPdfPathParam,
-                    UseShellExecute = true,
-                    Verb = "open"
-                });
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = fullPdfPathParam,
+                        UseShellExecute = true,
+                        Verb = "open"
+                    });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    System.Diagnostics.Process.Start("open", fullPdfPathParam);
+                }
+                else // Linux
+                {
+                    System.Diagnostics.Process.Start("xdg-open", fullPdfPathParam);
+                }
             }
             catch (Exception ex)
             {
