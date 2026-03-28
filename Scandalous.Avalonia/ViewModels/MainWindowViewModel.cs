@@ -131,18 +131,25 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private async Task GetScannersAsync()
     {
-        var previousSelection = SelectedScanner;
-        var devices = await _scanner.GetScanDevicesAsync();
-        Scanners.Clear();
-        foreach (var device in devices)
-            Scanners.Add(device.Name);
+        try
+        {
+            var previousSelection = SelectedScanner;
+            var devices = await _scanner.GetScanDevicesAsync();
+            Scanners.Clear();
+            foreach (var device in devices)
+                Scanners.Add(device.Name);
 
-        if (!string.IsNullOrEmpty(previousSelection) && Scanners.Contains(previousSelection))
-            SelectedScanner = previousSelection;
-        else if (Scanners.Count > 0)
-            SelectedScanner = Scanners[0];
-        else
-            SelectedScanner = string.Empty;
+            if (!string.IsNullOrEmpty(previousSelection) && Scanners.Contains(previousSelection))
+                SelectedScanner = previousSelection;
+            else if (Scanners.Count > 0)
+                SelectedScanner = Scanners[0];
+            else
+                SelectedScanner = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Could not list scanners: {ex.Message}";
+        }
     }
 
     [RelayCommand]
