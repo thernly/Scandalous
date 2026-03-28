@@ -1,5 +1,4 @@
 using NAPS2.Images;
-using NAPS2.Images.ImageSharp;
 using NAPS2.Ocr;
 using NAPS2.Pdf;
 using NAPS2.Scan;
@@ -16,9 +15,9 @@ namespace Scandalous.Core.Services
         public event EventHandler<PageScannedEventArgs>? PageScanned;
         private bool _disposed = false;
 
-        public DocumentScanner()
+        public DocumentScanner(ImageContext imageContext)
         {
-            _scanningContext = new ScanningContext(new ImageSharpImageContext());
+            _scanningContext = new ScanningContext(imageContext);
             _scanController = new ScanController(_scanningContext);
         }
 
