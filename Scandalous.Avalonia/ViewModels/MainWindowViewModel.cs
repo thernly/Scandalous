@@ -190,6 +190,9 @@ public partial class MainWindowViewModel : ObservableObject
         await _configManager.SaveConfigurationAsync(config);
     }
 
+    public Task<Core.Models.WindowStateInfo?> LoadWindowStateAsync() => _configManager.LoadWindowStateAsync();
+    public Task SaveWindowStateAsync(Core.Models.WindowStateInfo state) => _configManager.SaveWindowStateAsync(state);
+
     private void RefreshLanguageCodes()
     {
         var codes = _languageService.GetAvailableLanguageCodes(TessdataFolder, SelectedLanguageCode);

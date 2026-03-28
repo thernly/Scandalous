@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Scandalous.Avalonia.ViewModels;
+using Scandalous.Core.Models;
 
 namespace Scandalous.Avalonia.Views;
 
@@ -50,11 +51,42 @@ public partial class MainWindow : Window
         };
 
         await vm.InitializeAsync();
+
+        var windowState = await vm.LoadWindowStateAsync();
+        if (windowState != null)
+        {
+            Width = windowState.Width;
+            Height = windowState.Height;
+            if (!double.IsNaN(windowState.Left) && !double.IsNaN(windowState.Top))
+                Position = new global::Avalonia.PixelPoint((int)windowState.Left, (int)windowState.Top);
+            WindowState = windowState.State switch
+            {
+                Core.Models.WindowState.Maximized => global::Avalonia.Controls.WindowState.Maximized,
+                Core.Models.WindowState.Minimized => global::Avalonia.Controls.WindowState.Minimized,
+                _ => global::Avalonia.Controls.WindowState.Normal
+            };
+        }
     }
 
     private async void OnClosing(object? sender, global::Avalonia.Controls.WindowClosingEventArgs e)
     {
-        if (DataContext is MainWindowViewModel vm)
-            await vm.SaveConfigurationAsync();
+        if (DataContext is not MainWindowViewModel vm) return;
+
+        await vm.SaveConfigurationAsync();
+
+        var windowState = new WindowStateInfo
+        {
+            Width = Width,
+            Height = Height,
+            Left = Position.X,
+            Top = Position.Y,
+            State = WindowState switch
+            {
+                global::Avalonia.Controls.WindowState.Maximized => Core.Models.WindowState.Maximized,
+                global::Avalonia.Controls.WindowState.Minimized => Core.Models.WindowState.Minimized,
+                _ => Core.Models.WindowState.Normal
+            }
+        };
+        await vm.SaveWindowStateAsync(windowState);
     }
 }
