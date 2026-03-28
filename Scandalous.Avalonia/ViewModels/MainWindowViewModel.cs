@@ -1,14 +1,16 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Scandalous.Core.Enums;
 using Scandalous.Core.Services;
+using Scandalous.Core.Validation;
 
 namespace Scandalous.Avalonia.ViewModels;
 
-public partial class MainWindowViewModel : ObservableObject
+public partial class MainWindowViewModel : ObservableValidator
 {
     private readonly IDocumentScanner _scanner;
     private readonly IConfigurationManager _configManager;
@@ -25,7 +27,9 @@ public partial class MainWindowViewModel : ObservableObject
 
     // Observable properties
     [ObservableProperty] private string outputFolder = string.Empty;
-    [ObservableProperty] private string baseFilename = "output";
+    [ObservableProperty]
+    [CustomValidation(typeof(MainWindowViewModel), nameof(ValidateBaseFilename))]
+    private string baseFilename = "output";
     [ObservableProperty] private ScannerColorMode colorMode = ScannerColorMode.Grayscale;
     [ObservableProperty] private DocumentOptions documentOption = DocumentOptions.Combined;
     [ObservableProperty] private bool autoDeskew = true;
@@ -45,6 +49,12 @@ public partial class MainWindowViewModel : ObservableObject
     public int[] DpiOptions { get; } = [150, 300, 600, 1200];
     public ObservableCollection<string> Scanners { get; } = [];
     public ObservableCollection<string> AvailableLanguageCodes { get; } = [];
+
+    public static ValidationResult? ValidateBaseFilename(string? value, ValidationContext context)
+    {
+        var (isValid, errorMessage) = FileNameValidator.IsValid(value, isBaseNameOnly: true);
+        return isValid ? ValidationResult.Success : new ValidationResult(errorMessage);
+    }
 
     public MainWindowViewModel(
         IDocumentScanner scanner,
