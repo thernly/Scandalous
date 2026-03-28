@@ -1,8 +1,119 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Scandalous.Avalonia.ViewModels"
+        xmlns:enums="using:Scandalous.Core.Enums"
         x:Class="Scandalous.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
         Title="Scandalous"
         Width="1200" Height="800"
         MinWidth="800" MinHeight="600">
-    <TextBlock Text="Loading..." HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400" MinWidth="350" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Controls panel -->
+        <ScrollViewer Grid.Column="0">
+            <StackPanel Margin="12" Spacing="12">
+
+                <!-- Output section -->
+                <TextBlock Text="Output" FontWeight="SemiBold" FontSize="14" />
+                <Button Content="Output Folder..." Command="{Binding BrowseOutputFolderCommand}" HorizontalAlignment="Stretch" />
+                <TextBlock Text="{Binding OutputFolder}" TextTrimming="CharacterEllipsis" />
+                <TextBox Text="{Binding BaseFilename}" MaxLength="200" Watermark="Base filename" />
+
+                <!-- Scanner section -->
+                <TextBlock Text="Scanner" FontWeight="SemiBold" FontSize="14" />
+                <ListBox ItemsSource="{Binding Scanners}"
+                         SelectedItem="{Binding SelectedScanner}"
+                         Height="100" />
+                <Button Content="Refresh Scanners" Command="{Binding GetScannersCommand}" HorizontalAlignment="Stretch" />
+
+                <!-- Scan Options -->
+                <Expander Header="Scan Options" IsExpanded="True">
+                    <StackPanel Spacing="8" Margin="0,8,0,0">
+
+                        <TextBlock Text="Color Mode" FontWeight="SemiBold" />
+                        <RadioButton Content="Grayscale" GroupName="ColorMode"
+                                     IsChecked="{Binding ColorMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerColorMode.Grayscale}}" />
+                        <RadioButton Content="Black &amp; White" GroupName="ColorMode"
+                                     IsChecked="{Binding ColorMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerColorMode.BlackAndWhite}}" />
+                        <RadioButton Content="Color" GroupName="ColorMode"
+                                     IsChecked="{Binding ColorMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerColorMode.Color}}" />
+
+                        <TextBlock Text="Paper Source" FontWeight="SemiBold" Margin="0,8,0,0" />
+                        <RadioButton Content="Feeder (Duplex)" GroupName="PaperSource"
+                                     IsChecked="{Binding PaperSource, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerPaperSource.FeederDuplex}}" />
+                        <RadioButton Content="Feeder (Simplex)" GroupName="PaperSource"
+                                     IsChecked="{Binding PaperSource, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerPaperSource.FeederSimplex}}" />
+                        <RadioButton Content="Flatbed" GroupName="PaperSource"
+                                     IsChecked="{Binding PaperSource, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerPaperSource.Flatbed}}" />
+
+                        <TextBlock Text="Document Options" FontWeight="SemiBold" Margin="0,8,0,0" />
+                        <RadioButton Content="Combined PDF" GroupName="DocumentOption"
+                                     IsChecked="{Binding DocumentOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:DocumentOptions.Combined}}" />
+                        <RadioButton Content="Individual PDFs" GroupName="DocumentOption"
+                                     IsChecked="{Binding DocumentOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:DocumentOptions.Individual}}" />
+
+                        <TextBlock Text="DPI" FontWeight="SemiBold" Margin="0,8,0,0" />
+                        <ComboBox ItemsSource="{Binding DpiOptions}" SelectedItem="{Binding SelectedDpi}" HorizontalAlignment="Stretch" />
+
+                        <CheckBox Content="Auto Deskew" IsChecked="{Binding AutoDeskew}" />
+                        <CheckBox Content="Exclude Blank Pages" IsChecked="{Binding ExcludeBlankPages}" />
+
+                    </StackPanel>
+                </Expander>
+
+                <!-- OCR Settings -->
+                <Expander Header="OCR Settings" IsExpanded="{Binding OcrEnabled}">
+                    <StackPanel Spacing="8" Margin="0,8,0,0">
+                        <CheckBox Content="Enable OCR" IsChecked="{Binding OcrEnabled}" />
+                        <Button Content="Tessdata Folder..." Command="{Binding BrowseTessdataFolderCommand}" HorizontalAlignment="Stretch" />
+                        <TextBlock Text="{Binding TessdataFolder}" TextTrimming="CharacterEllipsis" />
+                        <ComboBox ItemsSource="{Binding AvailableLanguageCodes}"
+                                  SelectedItem="{Binding SelectedLanguageCode}"
+                                  HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                </Expander>
+
+                <!-- Scan button -->
+                <Button Content="Scan" Command="{Binding ScanCommand}"
+                        Classes="accent"
+                        HorizontalAlignment="Stretch"
+                        FontSize="16"
+                        Padding="0,10" />
+
+                <!-- Status section -->
+                <TextBlock Text="{Binding StatusText}" />
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
+                <TextBlock Text="{Binding PageCount, StringFormat='Pages scanned: {0}'}" />
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Splitter -->
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+
+        <!-- Image preview panel -->
+        <Panel Grid.Column="2">
+            <!-- Placeholder when no preview -->
+            <TextBlock Text="No preview — scan a document to see results here"
+                       IsVisible="{Binding PreviewImagePath, Converter={StaticResource IsNullConverter}}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Opacity="0.5"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Margin="20" />
+
+            <!-- Preview image -->
+            <Image Source="{Binding PreviewImagePath, Converter={StaticResource PathToBitmapConverter}}"
+                   IsVisible="{Binding PreviewImagePath, Converter={StaticResource IsNotNullConverter}}"
+                   Stretch="Uniform" />
+        </Panel>
+
+    </Grid>
 </Window>
