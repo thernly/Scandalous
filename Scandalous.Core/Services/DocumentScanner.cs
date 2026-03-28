@@ -1,5 +1,5 @@
 using NAPS2.Images;
-using NAPS2.Images.Gdi;
+using NAPS2.Images.ImageSharp;
 using NAPS2.Ocr;
 using NAPS2.Pdf;
 using NAPS2.Scan;
@@ -18,7 +18,7 @@ namespace Scandalous.Core.Services
 
         public DocumentScanner()
         {
-            _scanningContext = new ScanningContext(new GdiImageContext());
+            _scanningContext = new ScanningContext(new ImageSharpImageContext());
             _scanController = new ScanController(_scanningContext);
         }
 

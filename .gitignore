@@ -402,8 +402,11 @@ FodyWeavers.xsd
 *.old
 *.backup
 
-# Code Reviews/Assessments
+# Code Reviews/Assessments/Tasks/Plans
 *assessment*.md
 Documents/Assessments/
 Documents/CodeReviews/
 Documents/Tasks/
+assess*.md
+plan*.md
+tasks*.md
