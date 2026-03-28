@@ -1,5 +1,6 @@
 using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Xunit;
 
@@ -197,6 +198,9 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithInvalidOutputFolder_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("'<' and '>' are valid path chars on non-Windows platforms");
+
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/invalid<folder>",
@@ -208,6 +212,8 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithInvalidBaseFileName_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '<' is a valid filename char on non-Windows platforms");
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/test",
@@ -233,6 +239,8 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithReservedFolderName_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/CON",
@@ -244,6 +252,8 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithReservedFileName_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/test",
@@ -299,6 +309,8 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithInvalidTessdataFolder_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '<' is a valid path char on non-Windows platforms");
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/test",

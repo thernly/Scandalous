@@ -1,3 +1,4 @@
+using NAPS2.Images.ImageSharp;
 using Scandalous.Core.Models;
 using Scandalous.Core.Services;
 
@@ -10,7 +11,7 @@ namespace Scandalous.Core.Tests.Services
 
         public DocumentScannerEnhancedTests()
         {
-            _scanner = new DocumentScanner();
+            _scanner = new DocumentScanner(new ImageSharpImageContext());
             _testOutputFolder = Path.Combine(Path.GetTempPath(), "ScandalousTests");
             
             // Ensure test directory exists
@@ -153,7 +154,7 @@ namespace Scandalous.Core.Tests.Services
         public void Dispose_CanBeCalledMultipleTimes_Safely()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
 
             // Act
             var exception = Record.Exception(() =>
@@ -171,7 +172,7 @@ namespace Scandalous.Core.Tests.Services
         public void Dispose_CanBeCalledOnNewInstance_Safely()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
 
             // Act
             var exception = Record.Exception(() => scanner.Dispose());
@@ -184,7 +185,7 @@ namespace Scandalous.Core.Tests.Services
         public void Dispose_CanBeCalledOnDisposedInstance_Safely()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             scanner.Dispose();
 
             // Act
@@ -198,7 +199,7 @@ namespace Scandalous.Core.Tests.Services
         public void Dispose_CanBeCalledOnInstanceWithEventSubscribers_Safely()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             scanner.PageScanned += (sender, e) => { };
 
             // Act
@@ -212,7 +213,7 @@ namespace Scandalous.Core.Tests.Services
         public void Dispose_CanBeCalledOnInstanceWithMultipleEventSubscribers_Safely()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             
             scanner.PageScanned += (sender, e) => { };
             scanner.PageScanned += (sender, e) => { };
@@ -228,7 +229,7 @@ namespace Scandalous.Core.Tests.Services
         public void Dispose_CanBeCalledOnInstanceWithUnsubscribedEvents_Safely()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             EventHandler<PageScannedEventArgs> handler = (sender, e) => { };
             
             scanner.PageScanned += handler;
@@ -249,7 +250,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task ScanDocuments_WithNullConfiguration_ThrowsArgumentNullException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => scanner.ScanDocuments(null!, TestContext.Current.CancellationToken));
@@ -260,7 +261,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task ScanDocuments_WithEmptyOutputFolder_ThrowsArgumentException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             var invalidConfig = new ScanConfiguration
             {
                 OutputFolder = "", // Invalid empty folder
@@ -276,7 +277,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task ScanDocuments_WithWhitespaceOutputFolder_ThrowsArgumentException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             var invalidConfig = new ScanConfiguration
             {
                 OutputFolder = "   ", // Invalid whitespace folder
@@ -292,7 +293,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task ScanDocuments_WithEmptyBaseFileName_ThrowsArgumentException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             var invalidConfig = new ScanConfiguration
             {
                 OutputFolder = @"C:\temp",
@@ -308,7 +309,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task ScanDocuments_WithWhitespaceBaseFileName_ThrowsArgumentException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             var invalidConfig = new ScanConfiguration
             {
                 OutputFolder = @"C:\temp",
@@ -324,7 +325,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task ScanDocuments_WithNullOutputFolder_ThrowsArgumentException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             var invalidConfig = new ScanConfiguration
             {
                 OutputFolder = null!, // Invalid null folder
@@ -340,7 +341,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task ScanDocuments_WithNullBaseFileName_ThrowsArgumentException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             var invalidConfig = new ScanConfiguration
             {
                 OutputFolder = @"C:\temp",
@@ -356,7 +357,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task ScanDocuments_AfterDispose_ThrowsObjectDisposedException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             scanner.Dispose();
             var config = new ScanConfiguration
             {
@@ -373,7 +374,7 @@ namespace Scandalous.Core.Tests.Services
         public async Task GetScanDevicesAsync_AfterDispose_ThrowsObjectDisposedException()
         {
             // Arrange
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             scanner.Dispose();
 
             // Act & Assert
@@ -389,7 +390,7 @@ namespace Scandalous.Core.Tests.Services
         public void Constructor_CreatesInstance_Successfully()
         {
             // Arrange & Act
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
 
             // Assert
             Assert.NotNull(scanner);
@@ -399,8 +400,8 @@ namespace Scandalous.Core.Tests.Services
         public void Constructor_CreatesMultipleInstances_Successfully()
         {
             // Arrange & Act
-            var scanner1 = new DocumentScanner();
-            var scanner2 = new DocumentScanner();
+            var scanner1 = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
+            var scanner2 = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
 
             // Assert
             Assert.NotNull(scanner1);
@@ -412,7 +413,7 @@ namespace Scandalous.Core.Tests.Services
         public void Constructor_CreatesInstanceWithEventSupport()
         {
             // Arrange & Act
-            var scanner = new DocumentScanner();
+            var scanner = new DocumentScanner(new NAPS2.Images.ImageSharp.ImageSharpImageContext());
             var eventRaised = false;
             scanner.PageScanned += (sender, e) => eventRaised = true;
 

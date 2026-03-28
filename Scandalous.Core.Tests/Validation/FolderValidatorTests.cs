@@ -1,4 +1,5 @@
 using Scandalous.Core.Validation;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace Scandalous.Core.Tests.Validation
@@ -44,6 +45,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithInvalidCharacters_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '|' is a valid path char on non-Windows platforms");
             var folderName = "Invalid|Name";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -53,6 +56,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithMultipleInvalidCharacters_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '<', '>', '*', '?' are valid path chars on non-Windows platforms");
             var folderName = "Invalid<Name>With*Multiple?Chars";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -62,6 +67,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithReservedName_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             var folderName = "CON";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -71,6 +78,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithReservedNameInDifferentCase_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             var folderName = "con";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -188,6 +197,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithMultiSegmentPathWithReservedName_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             var folderName = "ValidFolder/CON/AnotherFolder";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -197,6 +208,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithMultiSegmentPathWithInvalidSegment_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '|' is a valid path char on non-Windows platforms");
             var folderName = "ValidFolder/Invalid|Name/AnotherFolder";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -260,6 +273,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithInvalidDriveLetter_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: drive letter validation is Windows-specific");
             var folderName = "1:";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -269,6 +284,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithDriveLetterEndingWithSpace_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: drive letter validation is Windows-specific");
             var folderName = "C: ";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -278,6 +295,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithDriveLetterEndingWithPeriod_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: drive letter validation is Windows-specific");
             var folderName = "C:.";
             var (isValid, errorMessage) = FolderValidator.IsValid(folderName);
             Assert.False(isValid);
@@ -363,6 +382,8 @@ namespace Scandalous.Core.Tests.Validation
         [InlineData("LPT9")]
         public void IsValid_WithAllReservedNames_ReturnsFalse(string reservedName)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             var (isValid, errorMessage) = FolderValidator.IsValid(reservedName);
             Assert.False(isValid);
             Assert.Contains("reserved system name", errorMessage);
@@ -374,6 +395,8 @@ namespace Scandalous.Core.Tests.Validation
         [InlineData("ValidFolder/AnotherFolder/CON")]
         public void IsValid_WithReservedNameInMultiSegmentPath_ReturnsFalse(string pathWithReservedName)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             var (isValid, errorMessage) = FolderValidator.IsValid(pathWithReservedName);
             Assert.False(isValid);
             Assert.Contains("reserved system name", errorMessage);

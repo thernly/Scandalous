@@ -2,6 +2,7 @@ using NSubstitute;
 using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
 using Scandalous.Core.Services;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Xunit;
 using System.IO;
@@ -195,6 +196,9 @@ namespace Scandalous.Core.Tests.Services
         [Fact]
         public async Task SaveConfigurationAsync_WithReadOnlyFile_ThrowsUnauthorizedAccessException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Read-only attribute does not prevent owner writes on non-Windows platforms");
+
             // Arrange
             var tempFile = Path.GetTempFileName();
             var configManager = new TestableConfigurationManager(tempFile);
