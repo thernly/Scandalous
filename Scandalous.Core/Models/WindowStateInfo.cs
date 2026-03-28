@@ -1,9 +1,7 @@
-using System.Windows;
-
 namespace Scandalous.Core.Models
 {
     /// <summary>
-    /// Represents the state of a WPF window for persistence
+    /// Represents the state of a window for persistence
     /// </summary>
     public class WindowStateInfo
     {
