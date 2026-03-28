@@ -5,7 +5,13 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Scandalous</AssemblyName>
+    <Version>1.0.0</Version>
   </PropertyGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx'))">
+    <None Include="Info.plist" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.13" />
