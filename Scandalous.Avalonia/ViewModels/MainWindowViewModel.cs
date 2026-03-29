@@ -50,6 +50,35 @@ public partial class MainWindowViewModel : ObservableValidator
     public ObservableCollection<string> Scanners { get; } = [];
     public ObservableCollection<string> AvailableLanguageCodes { get; } = [];
 
+    // Display-name arrays for enum ComboBoxes
+    public ScannerColorMode[] ColorModeOptions { get; } = [ScannerColorMode.Grayscale, ScannerColorMode.BlackAndWhite, ScannerColorMode.Color];
+    public ScannerPaperSource[] PaperSourceOptions { get; } = [ScannerPaperSource.FeederDuplex, ScannerPaperSource.FeederSimplex, ScannerPaperSource.Flatbed];
+    public DocumentOptions[] DocumentOptionOptions { get; } = [DocumentOptions.Combined, DocumentOptions.Individual];
+
+    public static string FormatColorMode(ScannerColorMode mode) => mode switch
+    {
+        ScannerColorMode.Grayscale => "Grayscale",
+        ScannerColorMode.BlackAndWhite => "Black & White",
+        ScannerColorMode.Color => "Color",
+        _ => mode.ToString()
+    };
+
+    public static string FormatPaperSource(ScannerPaperSource source) => source switch
+    {
+        ScannerPaperSource.FeederDuplex => "Feeder (Duplex)",
+        ScannerPaperSource.FeederSimplex => "Feeder (Simplex)",
+        ScannerPaperSource.Flatbed => "Flatbed",
+        ScannerPaperSource.Auto => "Auto",
+        _ => source.ToString()
+    };
+
+    public static string FormatDocumentOption(DocumentOptions option) => option switch
+    {
+        DocumentOptions.Combined => "Combined PDF",
+        DocumentOptions.Individual => "Individual PDFs",
+        _ => option.ToString()
+    };
+
     public static ValidationResult? ValidateBaseFilename(string? value, ValidationContext context)
     {
         var (isValid, errorMessage) = FileNameValidator.IsValid(value, isBaseNameOnly: true);
@@ -146,16 +175,19 @@ public partial class MainWindowViewModel : ObservableValidator
             StatusText = "Searching for scanners...";
             var previousSelection = SelectedScanner;
             var devices = await _scanner.GetScanDevicesAsync();
-            Scanners.Clear();
-            foreach (var device in devices)
-                Scanners.Add(device.Name);
+            var names = devices.Select(d => d.Name).ToList();
 
-            if (!string.IsNullOrEmpty(previousSelection) && Scanners.Contains(previousSelection))
-                SelectedScanner = previousSelection;
-            else if (Scanners.Count > 0)
-                SelectedScanner = Scanners[0];
-            else
-                SelectedScanner = string.Empty;
+            Scanners.Clear();
+            SelectedScanner = string.Empty;
+            foreach (var name in names)
+                Scanners.Add(name);
+
+            var target = !string.IsNullOrEmpty(previousSelection) && Scanners.Contains(previousSelection)
+                ? previousSelection
+                : Scanners.Count > 0 ? Scanners[0] : string.Empty;
+
+            // Defer selection so the ComboBox has processed the new items.
+            Dispatcher.UIThread.Post(() => SelectedScanner = target);
 
             StatusText = Scanners.Count > 0
                 ? $"Found {Scanners.Count} scanner(s)."

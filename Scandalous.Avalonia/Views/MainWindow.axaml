@@ -10,89 +10,124 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="400" MinWidth="350" />
+            <ColumnDefinition Width="340" MinWidth="300" />
             <ColumnDefinition Width="5" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- Controls panel -->
-        <ScrollViewer Grid.Column="0">
-            <StackPanel Margin="12" Spacing="12">
+        <DockPanel Grid.Column="0">
 
-                <!-- Output section -->
-                <TextBlock Text="Output" FontWeight="SemiBold" FontSize="14" />
-                <Button Content="Output Folder..." Command="{Binding BrowseOutputFolderCommand}" HorizontalAlignment="Stretch" />
-                <TextBlock Text="{Binding OutputFolder}" TextTrimming="CharacterEllipsis" />
-                <TextBox Text="{Binding BaseFilename}" MaxLength="200" Watermark="Base filename" />
+            <!-- Status section — pinned to bottom -->
+            <StackPanel DockPanel.Dock="Bottom" Margin="12,4,12,8" Spacing="4">
+                <Separator Margin="0,0,0,4" />
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
+                <TextBlock Text="{Binding StatusText}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding PageCount, StringFormat='Pages scanned: {0}'}" FontSize="12" />
+            </StackPanel>
 
-                <!-- Scanner section -->
-                <TextBlock Text="Scanner" FontWeight="SemiBold" FontSize="14" />
-                <ListBox ItemsSource="{Binding Scanners}"
-                         SelectedItem="{Binding SelectedScanner}"
-                         Height="100" />
-                <Button Content="Refresh Scanners" Command="{Binding GetScannersCommand}" HorizontalAlignment="Stretch" />
+            <!-- Scrollable controls -->
+            <ScrollViewer>
+                <StackPanel Margin="12,12,12,4" Spacing="8">
 
-                <!-- Scan Options -->
-                <Expander Header="Scan Options" IsExpanded="True">
-                    <StackPanel Spacing="8" Margin="0,8,0,0">
+                    <!-- Output section -->
+                    <TextBlock Text="Output" FontWeight="SemiBold" FontSize="12" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="{Binding OutputFolder}" TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center" Opacity="0.7" FontSize="12" Margin="0,0,6,0" />
+                        <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseOutputFolderCommand}"
+                                Padding="8,4" FontSize="12" />
+                    </Grid>
+                    <TextBox Text="{Binding BaseFilename}" MaxLength="200" Watermark="Base filename" Padding="6,4" />
 
-                        <TextBlock Text="Color Mode" FontWeight="SemiBold" />
-                        <RadioButton Content="Grayscale" GroupName="ColorMode"
-                                     IsChecked="{Binding ColorMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerColorMode.Grayscale}}" />
-                        <RadioButton Content="Black &amp; White" GroupName="ColorMode"
-                                     IsChecked="{Binding ColorMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerColorMode.BlackAndWhite}}" />
-                        <RadioButton Content="Color" GroupName="ColorMode"
-                                     IsChecked="{Binding ColorMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerColorMode.Color}}" />
+                    <Separator Margin="0,2" />
 
-                        <TextBlock Text="Paper Source" FontWeight="SemiBold" Margin="0,8,0,0" />
-                        <RadioButton Content="Feeder (Duplex)" GroupName="PaperSource"
-                                     IsChecked="{Binding PaperSource, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerPaperSource.FeederDuplex}}" />
-                        <RadioButton Content="Feeder (Simplex)" GroupName="PaperSource"
-                                     IsChecked="{Binding PaperSource, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerPaperSource.FeederSimplex}}" />
-                        <RadioButton Content="Flatbed" GroupName="PaperSource"
-                                     IsChecked="{Binding PaperSource, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:ScannerPaperSource.Flatbed}}" />
+                    <!-- Scanner section -->
+                    <TextBlock Text="Scanner" FontWeight="SemiBold" FontSize="12" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding Scanners}"
+                                  SelectedItem="{Binding SelectedScanner}"
+                                  HorizontalAlignment="Stretch" Margin="0,0,6,0" />
+                        <Button Grid.Column="1" Content="Refresh" Command="{Binding GetScannersCommand}"
+                                Padding="8,4" FontSize="12" />
+                    </Grid>
 
-                        <TextBlock Text="Document Options" FontWeight="SemiBold" Margin="0,8,0,0" />
-                        <RadioButton Content="Combined PDF" GroupName="DocumentOption"
-                                     IsChecked="{Binding DocumentOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:DocumentOptions.Combined}}" />
-                        <RadioButton Content="Individual PDFs" GroupName="DocumentOption"
-                                     IsChecked="{Binding DocumentOption, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static enums:DocumentOptions.Individual}}" />
+                    <Separator Margin="0,2" />
 
-                        <TextBlock Text="DPI" FontWeight="SemiBold" Margin="0,8,0,0" />
-                        <ComboBox ItemsSource="{Binding DpiOptions}" SelectedItem="{Binding SelectedDpi}" HorizontalAlignment="Stretch" />
+                    <!-- Scan Options — inline, no Expander -->
+                    <TextBlock Text="Scan Options" FontWeight="SemiBold" FontSize="12" />
 
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,2,0,0">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Color Mode" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
+                        <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ColorModeOptions}"
+                                  SelectedItem="{Binding ColorMode}" HorizontalAlignment="Stretch" Margin="0,2">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Paper Source" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
+                        <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding PaperSourceOptions}"
+                                  SelectedItem="{Binding PaperSource}" HorizontalAlignment="Stretch" Margin="0,2">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Document" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
+                        <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding DocumentOptionOptions}"
+                                  SelectedItem="{Binding DocumentOption}" HorizontalAlignment="Stretch" Margin="0,2">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="DPI" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
+                        <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding DpiOptions}"
+                                  SelectedItem="{Binding SelectedDpi}" HorizontalAlignment="Stretch" Margin="0,2" />
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4,0,0">
                         <CheckBox Content="Auto Deskew" IsChecked="{Binding AutoDeskew}" />
                         <CheckBox Content="Exclude Blank Pages" IsChecked="{Binding ExcludeBlankPages}" />
-
                     </StackPanel>
-                </Expander>
 
-                <!-- OCR Settings -->
-                <Expander Header="OCR Settings" IsExpanded="{Binding OcrEnabled}">
-                    <StackPanel Spacing="8" Margin="0,8,0,0">
-                        <CheckBox Content="Enable OCR" IsChecked="{Binding OcrEnabled}" />
-                        <Button Content="Tessdata Folder..." Command="{Binding BrowseTessdataFolderCommand}" HorizontalAlignment="Stretch" />
-                        <TextBlock Text="{Binding TessdataFolder}" TextTrimming="CharacterEllipsis" />
-                        <ComboBox ItemsSource="{Binding AvailableLanguageCodes}"
-                                  SelectedItem="{Binding SelectedLanguageCode}"
-                                  HorizontalAlignment="Stretch" />
-                    </StackPanel>
-                </Expander>
+                    <Separator Margin="0,2" />
 
-                <!-- Scan button -->
-                <Button Content="Scan" Command="{Binding ScanCommand}"
-                        Classes="accent"
-                        HorizontalAlignment="Stretch"
-                        FontSize="16"
-                        Padding="0,10" />
+                    <!-- OCR Settings -->
+                    <Expander Header="OCR Settings" IsExpanded="{Binding OcrEnabled}" Padding="0">
+                        <StackPanel Spacing="6" Margin="0,6,0,0">
+                            <CheckBox Content="Enable OCR" IsChecked="{Binding OcrEnabled}" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="{Binding TessdataFolder}" TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center" Opacity="0.7" FontSize="12" Margin="0,0,6,0" />
+                                <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseTessdataFolderCommand}"
+                                        Padding="8,4" FontSize="12" />
+                            </Grid>
+                            <ComboBox ItemsSource="{Binding AvailableLanguageCodes}"
+                                      SelectedItem="{Binding SelectedLanguageCode}"
+                                      HorizontalAlignment="Stretch" />
+                        </StackPanel>
+                    </Expander>
 
-                <!-- Status section -->
-                <TextBlock Text="{Binding StatusText}" />
-                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
-                <TextBlock Text="{Binding PageCount, StringFormat='Pages scanned: {0}'}" />
+                    <!-- Scan button -->
+                    <Button Content="Scan" Command="{Binding ScanCommand}"
+                            Classes="accent"
+                            HorizontalAlignment="Stretch"
+                            FontSize="14"
+                            Padding="0,8"
+                            Margin="0,4,0,0" />
 
-            </StackPanel>
-        </ScrollViewer>
+                </StackPanel>
+            </ScrollViewer>
+
+        </DockPanel>
 
         <!-- Splitter -->
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
