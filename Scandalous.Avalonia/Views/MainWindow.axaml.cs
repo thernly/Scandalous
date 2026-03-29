@@ -50,8 +50,6 @@ public partial class MainWindow : Window
             await dialog.ShowDialog<bool>(this);
         };
 
-        await vm.InitializeAsync();
-
         var windowState = await vm.LoadWindowStateAsync();
         if (windowState != null)
         {
@@ -66,6 +64,8 @@ public partial class MainWindow : Window
                 _ => global::Avalonia.Controls.WindowState.Normal
             };
         }
+
+        await vm.InitializeAsync();
     }
 
     private async void OnClosing(object? sender, global::Avalonia.Controls.WindowClosingEventArgs e)

@@ -40,7 +40,7 @@ public partial class MainWindowViewModel : ObservableValidator
     [ObservableProperty] private string tessdataFolder = string.Empty;
     [ObservableProperty] private string selectedLanguageCode = "eng";
     [ObservableProperty] private string selectedScanner = string.Empty;
-    [ObservableProperty] private string statusText = "Not Started";
+    [ObservableProperty] private string statusText = "Searching for scanners...";
     [ObservableProperty] private bool isScanning = false;
     [ObservableProperty] private string? previewImagePath = null;
     [ObservableProperty] private int pageCount = 0;
@@ -143,6 +143,7 @@ public partial class MainWindowViewModel : ObservableValidator
     {
         try
         {
+            StatusText = "Searching for scanners...";
             var previousSelection = SelectedScanner;
             var devices = await _scanner.GetScanDevicesAsync();
             Scanners.Clear();
@@ -155,6 +156,10 @@ public partial class MainWindowViewModel : ObservableValidator
                 SelectedScanner = Scanners[0];
             else
                 SelectedScanner = string.Empty;
+
+            StatusText = Scanners.Count > 0
+                ? $"Found {Scanners.Count} scanner(s)."
+                : "No scanners found.";
         }
         catch (Exception ex)
         {

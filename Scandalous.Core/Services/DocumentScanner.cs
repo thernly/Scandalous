@@ -5,6 +5,7 @@ using NAPS2.Scan;
 using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Scandalous.Core.Services
 {
@@ -37,7 +38,7 @@ namespace Scandalous.Core.Services
                 throw new ArgumentException("Output base file name cannot be null, empty, or whitespace.", nameof(configuration));
             }
 
-            var deviceList = await _scanController.GetDeviceList();
+            var deviceList = await DiscoverDevicesAsync(TimeSpan.FromSeconds(3), cancellationToken);
             var device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName) ?? throw new InvalidOperationException("The selected scanner is offline.");
             var options = PrepareScanOptions(device, configuration);
             List<ProcessedImage> processedImages = [];
@@ -221,9 +222,36 @@ namespace Scandalous.Core.Services
         public async Task<List<ScanDevice>> GetScanDevicesAsync()
         {
             ThrowIfDisposed();
-            
-            var deviceList = await _scanController.GetDeviceList();
-            return deviceList;
+            return await DiscoverDevicesAsync(TimeSpan.FromSeconds(3));
+        }
+
+        private async Task<List<ScanDevice>> DiscoverDevicesAsync(
+            TimeSpan timeout, CancellationToken ct = default)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                return await MacEsclDiscoveryService.DiscoverAsync(timeout, ct);
+
+            var driver = GetPlatformDriver();
+            var devices = new List<ScanDevice>();
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(timeout);
+            try
+            {
+                await foreach (var device in _scanController.GetDevices(driver, cts.Token))
+                    devices.Add(device);
+            }
+            catch (OperationCanceledException)
+            {
+                // Timeout expired — return whatever was found
+            }
+            return devices;
+        }
+
+        private static Driver GetPlatformDriver()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return Driver.Default;  // WIA
+            return Driver.Sane;  // SANE airscan backend on macOS/Linux (uses system mDNS)
         }
 
         protected virtual void OnPageScanned(string imageFilePath)
