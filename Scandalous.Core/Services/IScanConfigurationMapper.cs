@@ -27,5 +27,6 @@ namespace Scandalous.Core.Services
         public string TessdataFolder { get; set; } = string.Empty;
         public string SelectedLanguageCode { get; set; } = "eng";
         public string SelectedScannerName { get; set; } = string.Empty;
+        public string SelectedScannerUrl { get; set; } = string.Empty;
     }
 } 

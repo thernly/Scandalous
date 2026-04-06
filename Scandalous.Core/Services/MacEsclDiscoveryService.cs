@@ -1,8 +1,5 @@
 using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using NAPS2.Scan;
 
@@ -136,25 +133,39 @@ internal static partial class MacEsclDiscoveryService
         var rsMatch = ResourcePathRegex().Match(reachLine);
         var resourcePath = rsMatch.Success ? rsMatch.Groups[1].Value : "/eSCL";
 
-        IPAddress? ip;
-        try
-        {
-            var addresses = await Dns.GetHostAddressesAsync(hostname, ct);
-            ip = addresses.FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork)
-                 ?? addresses.FirstOrDefault();
-        }
-        catch
-        {
-            return null;
-        }
-
-        if (ip == null)
-            return null;
-
+        // Use the mDNS hostname directly (e.g. "printer.local") rather than
+        // resolving to an IP address.  On macOS, .local hostnames are resolved
+        // by mDNSResponder through the system resolver, which is more reliable
+        // than a raw IP — NAPS2's own ESCL driver uses the same approach.
         var scheme = tls || port == 443 ? "https" : "http";
-        var url = $"{scheme}://{ip}:{port}{resourcePath}";
+        var url = $"{scheme}://{hostname}:{port}{resourcePath}";
 
         return new ScanDevice(Driver.Escl, url, instanceName);
+    }
+
+    /// <summary>
+    /// Attempts to resolve a known scanner by instance name directly via dns-sd -L,
+    /// using macOS mDNSResponder's cache. Faster than a full browse and works even
+    /// when the scanner is not currently broadcasting (cached record may still exist).
+    /// </summary>
+    internal static async Task<ScanDevice?> TryResolveByNameAsync(
+        string instanceName, CancellationToken ct = default)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return null;
+
+        // Try HTTPS and HTTP concurrently; prefer the TLS result.
+        var httpsTask = SafeResolveAsync(instanceName, "_uscans._tcp", true,  ct);
+        var httpTask  = SafeResolveAsync(instanceName, "_uscan._tcp",  false, ct);
+        var results   = await Task.WhenAll(httpsTask, httpTask);
+        return results.FirstOrDefault(d => d != null);
+    }
+
+    private static async Task<ScanDevice?> SafeResolveAsync(
+        string instanceName, string serviceType, bool tls, CancellationToken ct)
+    {
+        try { return await ResolveServiceAsync(instanceName, serviceType, tls, ct); }
+        catch { return null; }
     }
 
     private static Process StartDnsSd(string[] args)

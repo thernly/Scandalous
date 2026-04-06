@@ -11,7 +11,7 @@ namespace Scandalous.Core.Services
             var colorMode = GetScannerColorMode(uiState);
             var scannerPaperSource = GetScannerPaperSource(uiState);
             
-            return new ScanConfiguration(
+            var config = new ScanConfiguration(
                 uiState.OutputFolder,
                 uiState.BaseFileName,
                 colorMode,
@@ -25,6 +25,8 @@ namespace Scandalous.Core.Services
                 uiState.SelectedLanguageCode,
                 uiState.SelectedScannerName
             );
+            config.LastKnownScannerUrl = uiState.SelectedScannerUrl;
+            return config;
         }
 
         public UIState BuildUIStateFromConfiguration(ScanConfiguration configuration)
@@ -47,7 +49,8 @@ namespace Scandalous.Core.Services
                 OcrEnabled = configuration.OcrEnabled,
                 TessdataFolder = configuration.TessdataFolder,
                 SelectedLanguageCode = configuration.TessdataLanguageCode,
-                SelectedScannerName = configuration.SelectedScannerName
+                SelectedScannerName = configuration.SelectedScannerName,
+                SelectedScannerUrl = configuration.LastKnownScannerUrl
             };
         }
 

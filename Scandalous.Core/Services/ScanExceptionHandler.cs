@@ -8,6 +8,20 @@ namespace Scandalous.Core.Services
         {
             return ex switch
             {
+                AlreadyHandledDriverException => new ScanExceptionResult
+                {
+                    IsHandled = true,
+                    UserMessage = string.Empty,
+                    ShouldRetry = false,
+                    OriginalException = ex
+                },
+                DeviceOfflineException => new ScanExceptionResult
+                {
+                    IsHandled = true,
+                    UserMessage = "The scanner is offline. Please ensure it is powered on and connected, then try again.",
+                    ShouldRetry = true,
+                    OriginalException = ex
+                },
                 DeviceFeederEmptyException => new ScanExceptionResult
                 {
                     IsHandled = true,
@@ -88,7 +102,7 @@ namespace Scandalous.Core.Services
                 _ => new ScanExceptionResult
                 {
                     IsHandled = false,
-                    UserMessage = $"An error occurred. Please check the log file.",
+                    UserMessage = $"An unexpected error occurred: {ex.Message}",
                     ShouldRetry = false,
                     OriginalException = ex
                 }

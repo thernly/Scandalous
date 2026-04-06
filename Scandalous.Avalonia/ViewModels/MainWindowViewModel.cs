@@ -40,6 +40,7 @@ public partial class MainWindowViewModel : ObservableValidator
     [ObservableProperty] private string tessdataFolder = string.Empty;
     [ObservableProperty] private string selectedLanguageCode = "eng";
     [ObservableProperty] private string selectedScanner = string.Empty;
+    private string _selectedScannerUrl = string.Empty;
     [ObservableProperty] private string statusText = "Searching for scanners...";
     [ObservableProperty] private bool isScanning = false;
     [ObservableProperty] private string? previewImagePath = null;
@@ -117,7 +118,7 @@ public partial class MainWindowViewModel : ObservableValidator
     {
         IsScanning = true;
         PageCount = 0;
-        StatusText = "Building configuration...";
+        StatusText = "Connecting to scanner...";
 
         var uiState = BuildUIState();
         var configuration = _configMapper.BuildConfigurationFromUIState(uiState);
@@ -185,6 +186,10 @@ public partial class MainWindowViewModel : ObservableValidator
             var target = !string.IsNullOrEmpty(previousSelection) && Scanners.Contains(previousSelection)
                 ? previousSelection
                 : Scanners.Count > 0 ? Scanners[0] : string.Empty;
+
+            var selectedDevice = devices.FirstOrDefault(d => d.Name == target);
+            if (selectedDevice != null)
+                _selectedScannerUrl = selectedDevice.ID;
 
             // Defer selection so the ComboBox has processed the new items.
             Dispatcher.UIThread.Post(() => SelectedScanner = target);
@@ -271,7 +276,8 @@ public partial class MainWindowViewModel : ObservableValidator
         OcrEnabled = OcrEnabled,
         TessdataFolder = TessdataFolder,
         SelectedLanguageCode = SelectedLanguageCode,
-        SelectedScannerName = SelectedScanner
+        SelectedScannerName = SelectedScanner,
+        SelectedScannerUrl = _selectedScannerUrl
     };
 
     private void ApplyUIState(UIState uiState)
@@ -292,5 +298,6 @@ public partial class MainWindowViewModel : ObservableValidator
         if (!string.IsNullOrEmpty(uiState.TessdataFolder)) TessdataFolder = uiState.TessdataFolder;
         if (!string.IsNullOrEmpty(uiState.SelectedLanguageCode)) SelectedLanguageCode = uiState.SelectedLanguageCode;
         if (!string.IsNullOrEmpty(uiState.SelectedScannerName)) SelectedScanner = uiState.SelectedScannerName;
+        if (!string.IsNullOrEmpty(uiState.SelectedScannerUrl)) _selectedScannerUrl = uiState.SelectedScannerUrl;
     }
 }

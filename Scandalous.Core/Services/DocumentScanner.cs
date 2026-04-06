@@ -38,8 +38,19 @@ namespace Scandalous.Core.Services
                 throw new ArgumentException("Output base file name cannot be null, empty, or whitespace.", nameof(configuration));
             }
 
-            var deviceList = await DiscoverDevicesAsync(TimeSpan.FromSeconds(3), cancellationToken);
-            var device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName) ?? throw new InvalidOperationException("The selected scanner is offline.");
+            // Re-discover the scanner at scan time to get a fresh ScanDevice handle.
+            var deviceList = await DiscoverDevicesAsync(TimeSpan.FromSeconds(10), cancellationToken);
+            var device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName);
+
+            if (device == null)
+            {
+                // Fall back to a longer discovery timeout.
+                deviceList = await DiscoverDevicesAsync(TimeSpan.FromSeconds(20), cancellationToken);
+                device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName);
+            }
+
+            if (device == null)
+                throw new InvalidOperationException("The selected scanner is offline.");
             var options = PrepareScanOptions(device, configuration);
             List<ProcessedImage> processedImages = [];
             var imageFiles = new List<string>();
@@ -251,7 +262,7 @@ namespace Scandalous.Core.Services
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return Driver.Default;  // WIA
-            return Driver.Sane;  // SANE airscan backend on macOS/Linux (uses system mDNS)
+            return Driver.Sane;         // SANE airscan backend on Linux
         }
 
         protected virtual void OnPageScanned(string imageFilePath)
@@ -280,7 +291,6 @@ namespace Scandalous.Core.Services
             {
                 disposableContext.Dispose();
             }
-
             // Free unmanaged resources (unmanaged objects) and override a finalizer below.
             // Set large fields to null.
             _disposed = true;
