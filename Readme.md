@@ -43,6 +43,78 @@ Scandalous is a desktop application (with Windows Forms and WPF interfaces) for 
   * `NAPS2.Images.Gdi`
   * `NAPS2.Tesseract.Binaries`
 
+## Building from Source (macOS / VS Code)
+
+These instructions cover building and running the Avalonia-based front end on a MacBook using VS Code and the .NET CLI.
+
+### Prerequisites (macOS)
+
+* [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) — verify with `dotnet --version`
+* [VS Code](https://code.visualstudio.com/) with the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension installed
+* An eSCL-compatible network scanner (TWAIN/WIA is Windows-only; the Mac front end uses eSCL discovery)
+
+### Restore dependencies
+
+```bash
+dotnet restore
+```
+
+### Build (Debug)
+
+```bash
+dotnet build Scandalous.Avalonia/Scandalous.Avalonia.csproj
+```
+
+Or build the entire solution (core library + UI + tests):
+
+```bash
+dotnet build Scandalous.sln
+```
+
+### Run in Development
+
+```bash
+dotnet run --project Scandalous.Avalonia/Scandalous.Avalonia.csproj
+```
+
+### Run Tests
+
+```bash
+dotnet test Scandalous.Core.Tests/Scandalous.Core.Tests.csproj
+```
+
+### Publish as a macOS .app Bundle
+
+A convenience script is included that publishes a self-contained `.app` bundle.
+
+**Apple Silicon (arm64) — default:**
+
+```bash
+./publish-mac.sh
+```
+
+**Intel Mac (x64):**
+
+```bash
+./publish-mac.sh osx-x64
+```
+
+The finished bundle is placed at `publish/Scandalous.app`. You can run it directly or drag it to `/Applications`.
+
+> **Note:** The publish script requires the executable bit. If needed, run `chmod +x publish-mac.sh` once before using it.
+
+### Publish manually with the .NET CLI
+
+```bash
+# Apple Silicon
+dotnet publish Scandalous.Avalonia/Scandalous.Avalonia.csproj \
+  -c Release -r osx-arm64 --self-contained true -o publish/out
+
+# Intel
+dotnet publish Scandalous.Avalonia/Scandalous.Avalonia.csproj \
+  -c Release -r osx-x64 --self-contained true -o publish/out
+```
+
 ## OCR Requirements
 
 To use the OCR feature, you must download the appropriate Tesseract language data files:

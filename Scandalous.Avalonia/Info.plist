@@ -18,6 +18,8 @@
   <string>????</string>
   <key>CFBundleExecutable</key>
   <string>Scandalous</string>
+  <key>CFBundleIconFile</key>
+  <string>Scandalous</string>
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>NSPrincipalClass</key>

@@ -410,3 +410,7 @@ Documents/Tasks/
 assess*.md
 plan*.md
 tasks*.md
+
+# OS generated files
+.DS_Store
+Thumbs.db
