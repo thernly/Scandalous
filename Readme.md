@@ -61,11 +61,13 @@ Or build the entire solution, including the core library and tests:
 dotnet build Scandalous.sln
 ```
 
-Run the application in development:
+Run the application in Debug mode:
 
 ```bash
-dotnet run --project Scandalous.Avalonia/Scandalous.Avalonia.csproj
+dotnet run --project Scandalous.Avalonia/Scandalous.Avalonia.csproj --configuration Debug
 ```
+
+In Visual Studio or Rider, open `Scandalous.sln`, set `Scandalous.Avalonia` as the startup project, and press F5.
 
 Run the tests:
 
