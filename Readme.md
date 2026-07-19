@@ -34,7 +34,7 @@ The macOS publishing script creates a self-contained application bundle, so the 
 
 Key NuGet dependencies include:
 
-- `Avalonia`
+- `Avalonia` 12.1.0
 - `CommunityToolkit.Mvvm`
 - `Microsoft.Extensions.DependencyInjection`
 - `NAPS2.Sdk`

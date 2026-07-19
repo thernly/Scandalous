@@ -38,7 +38,7 @@
                         <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseOutputFolderCommand}"
                                 Padding="8,4" FontSize="12" />
                     </Grid>
-                    <TextBox Text="{Binding BaseFilename}" MaxLength="200" Watermark="Base filename" Padding="6,4" />
+                    <TextBox Text="{Binding BaseFilename}" MaxLength="200" PlaceholderText="Base filename" Padding="6,4" />
 
                     <Separator Margin="0,2" />
 
@@ -62,7 +62,7 @@
                         <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ColorModeOptions}"
                                   SelectedItem="{Binding ColorMode}" HorizontalAlignment="Stretch" Margin="0,2">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="enums:ScannerColorMode">
                                     <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
@@ -72,7 +72,7 @@
                         <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding PaperSourceOptions}"
                                   SelectedItem="{Binding PaperSource}" HorizontalAlignment="Stretch" Margin="0,2">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="enums:ScannerPaperSource">
                                     <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
@@ -82,7 +82,7 @@
                         <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding DocumentOptionOptions}"
                                   SelectedItem="{Binding DocumentOption}" HorizontalAlignment="Stretch" Margin="0,2">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="enums:DocumentOptions">
                                     <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
