@@ -1,227 +1,179 @@
 # Scandalous
 
-## Overview
-
-Scandalous is a desktop application (with Windows Forms and WPF interfaces) for scanning documents using TWAIN/WIA compatible scanners. It leverages the NAPS2.Sdk to interact with scanning devices, process images, and export them as PDF files. The application provides a modern, user-friendly interface to configure scan settings, preview scanned pages, and manage output files.
+Scandalous is a cross-platform Avalonia desktop application for scanning documents and exporting them as PDF files. It uses the NAPS2 SDK for scanner access, image processing, OCR, and PDF generation.
 
 ## Features
 
-* Scan documents from scanners supporting TWAIN/WIA drivers.
-* Support for various color modes: Color, Grayscale, Black and White.
-* Configurable paper sources: Auto, Feeder (Simplex/Duplex), Flatbed.
-* Adjustable scan resolution (DPI).
-* Automatic image processing options:
-  * Auto Deskew: Straightens skewed images.
-  * Exclude Blank Pages: Detects and removes blank pages.
-* **OCR (Optical Character Recognition) support:**
-  * Enable OCR to make scanned PDFs searchable.
-  * Select the desired OCR language from installed Tesseract language data files.
-  * Requires downloading the appropriate `tessdata` language files (see [OCR Requirements](#ocr-requirements)).
-* Output scanned documents as:
-  * A single combined PDF file.
-  * Individual PDF files for each scanned page.
-* When scanning from the flatbed in Combined mode, the application prompts after each page to add more pages to the same PDF, allowing multi-page documents to be built one page at a time.
-* User-friendly interface to:
-  * Select output folder and base filename.
-  * Configure scan options (color, DPI, paper source, OCR, etc.).
-  * Initiate scanning.
-  * View status updates.
-* Preview scanned pages (as temporary PNGs) within the application with navigation controls.
-* List available scanner devices.
-* Robust input validation for output folder paths and base filenames.
-* Remembers your last-used scan settings and output location.
-* Automatically attempts to open the generated PDF file (for combined documents).
-* Improved error handling and feedback for common scanner and file issues.
+- Discovers and scans with platform-appropriate scanner backends:
+  - Windows: WIA
+  - macOS: eSCL-compatible network scanners discovered through Bonjour (`dns-sd`)
+  - Linux: SANE
+- Supports Color, Grayscale, and Black & White scanning.
+- Supports feeder duplex, feeder simplex, and flatbed paper sources.
+- Offers 150, 300, 600, and 1200 DPI scan resolutions.
+- Can automatically deskew pages and exclude blank pages.
+- Exports pages as either one combined PDF or separate PDFs.
+- Prompts for additional pages when using a flatbed with combined-PDF output.
+- Shows the most recently scanned page in the preview area and reports scan progress.
+- Can apply Tesseract OCR to create searchable PDFs.
+- Remembers scan settings, output location, selected scanner, and window state.
+- Opens a completed combined PDF in the system's default PDF viewer.
+- Provides validation and user-friendly errors for common scanner and file problems.
 
-## Prerequisites
+## Requirements
 
-* .NET 10 Runtime.
-* A TWAIN or WIA compatible scanner with its drivers installed on the system.
-* Dependencies (managed via NuGet):
-  * `Microsoft.Extensions.DependencyInjection`
-  * `NAPS2.Sdk`
-  * `NAPS2.Images.Gdi`
-  * `NAPS2.Tesseract.Binaries`
+To build and run from source:
 
-## Building from Source (macOS / VS Code)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- A compatible scanner and any drivers or backend required by your operating system
+- macOS: an eSCL-compatible scanner available on the local network
+- Windows: a scanner available through WIA
+- Linux: a scanner available through SANE
 
-These instructions cover building and running the Avalonia-based front end on a MacBook using VS Code and the .NET CLI.
+The macOS publishing script creates a self-contained application bundle, so the resulting app does not require a separate .NET runtime installation.
 
-### Prerequisites (macOS)
+Key NuGet dependencies include:
 
-* [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) — verify with `dotnet --version`
-* [VS Code](https://code.visualstudio.com/) with the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension installed
-* An eSCL-compatible network scanner (TWAIN/WIA is Windows-only; the Mac front end uses eSCL discovery)
+- `Avalonia`
+- `CommunityToolkit.Mvvm`
+- `Microsoft.Extensions.DependencyInjection`
+- `NAPS2.Sdk`
+- `NAPS2.Images.ImageSharp`
+- `NAPS2.Tesseract.Binaries`
 
-### Restore dependencies
+## Build and Run
+
+Restore dependencies:
 
 ```bash
 dotnet restore
 ```
 
-### Build (Debug)
+Build the Avalonia application:
 
 ```bash
 dotnet build Scandalous.Avalonia/Scandalous.Avalonia.csproj
 ```
 
-Or build the entire solution (core library + UI + tests):
+Or build the entire solution, including the core library and tests:
 
 ```bash
 dotnet build Scandalous.sln
 ```
 
-### Run in Development
+Run the application in development:
 
 ```bash
 dotnet run --project Scandalous.Avalonia/Scandalous.Avalonia.csproj
 ```
 
-### Run Tests
+Run the tests:
 
 ```bash
 dotnet test Scandalous.Core.Tests/Scandalous.Core.Tests.csproj
 ```
 
-### Publish as a macOS .app Bundle
+## Publish for macOS
 
-A convenience script is included that publishes a self-contained `.app` bundle.
+The included script publishes a self-contained macOS `.app` bundle.
 
-**Apple Silicon (arm64) — default:**
+Apple Silicon (`osx-arm64`, the default):
 
 ```bash
 ./publish-mac.sh
 ```
 
-**Intel Mac (x64):**
+Intel Mac (`osx-x64`):
 
 ```bash
 ./publish-mac.sh osx-x64
 ```
 
-The finished bundle is placed at `publish/Scandalous.app`. You can run it directly or drag it to `/Applications`.
+The finished bundle is written to `publish/Scandalous.app`. You can run it directly or drag it into `/Applications`.
 
-> **Note:** The publish script requires the executable bit. If needed, run `chmod +x publish-mac.sh` once before using it.
+If the script is not executable, run this once:
 
-### Publish manually with the .NET CLI
+```bash
+chmod +x publish-mac.sh
+```
+
+To create a self-contained publish directory without assembling an `.app` bundle, use the .NET CLI directly:
 
 ```bash
 # Apple Silicon
 dotnet publish Scandalous.Avalonia/Scandalous.Avalonia.csproj \
   -c Release -r osx-arm64 --self-contained true -o publish/out
 
-# Intel
+# Intel Mac
 dotnet publish Scandalous.Avalonia/Scandalous.Avalonia.csproj \
   -c Release -r osx-x64 --self-contained true -o publish/out
 ```
 
-## OCR Requirements
+## OCR Setup
 
-To use the OCR feature, you must download the appropriate Tesseract language data files:
+OCR requires Tesseract language data files:
 
-1. Visit [https://github.com/tesseract-ocr/tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast).
-2. Download the `.traineddata` files for the languages you wish to use (e.g., `eng.traineddata` for English).
-3. Place these files in a folder on your system (e.g., `C:\tessdata`).
-4. In the application, set the "Tessdata Folder" to this directory and select the desired language code.
+1. Download the required `.traineddata` files from [tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast). For example, download `eng.traineddata` for English.
+2. Place the files in a directory such as `C:\tessdata` on Windows or `~/tessdata` on macOS and Linux.
+3. Expand **OCR Settings** in Scandalous, enable OCR, and choose that directory.
+4. Select a language found in the directory.
 
-## How to Use
+> **Current limitation:** PDF export currently invokes OCR with the `eng` language code even if another language is selected. Keep `eng.traineddata` in the configured directory. Other language selections are persisted but are not yet passed to the exporter.
 
-1. **Launch the Scandalous application.**
-2. **Output Folder:**
-    * The default output folder is displayed.
-    * Click "Browse..." to select a different directory where scanned files (temporary images and final PDFs) will be saved.
-3. **Base Filename:**
-    * Enter a base name for the output PDF files (e.g., "ScannedDocument").
-    * The application will append ".pdf" for combined documents or a unique identifier and ".pdf" for individual documents.
-4. **Color Mode:**
-    * Select the desired color mode for scanning:
-        * `Color`
-        * `Grayscale`
-        * `Black & White`
-5. **Document Options:**
-    * Choose how the scanned pages should be saved:
-        * `Combined`: All scanned pages will be compiled into a single PDF file (e.g., "ScannedDocument.pdf").
-        * `Individual`: Each scanned page will be saved as a separate PDF file (e.g., "ScannedDocument-GUID1.pdf", "ScannedDocument-GUID2.pdf").
-6. **Paper Source:**
-    * Select the paper source:
-        * `Feeder (Duplex)`
-        * `Feeder (Simplex)`
-        * `Flatbed`
-        * `Auto`
-7. **DPI:**
-    * Choose the scan resolution (DPI) from the dropdown.
-8. **Options:**
-    * `Auto Deskew`: Check this box to enable automatic straightening of scanned images.
-    * `Exclude Blank Pages`: Check this box to enable automatic detection and removal of blank pages from the scan job.
-    * **OCR**: Check this box to enable OCR for scanned documents. When enabled:
-        * Set the "Tessdata Folder" to the directory containing your `.traineddata` files.
-        * Select the desired OCR language from the dropdown.
-9. **Scanner Information:**
-    * Click "Get Scanner List" to populate the list box with names of available scanners detected on your system.
-    * The selected scanner will be used for scanning operations.
-10. **Scanning:**
-    * Click the "Scan" button to start the scanning process.
-    * The status label at the bottom will provide feedback on the current operation (e.g., "Building configuration...", "Scanning...", "Scanning completed.").
-    * **Flatbed + Combined mode:** After each page is scanned, a dialog will ask "More Pages?". Click **Yes** to place the next page on the flatbed and scan it into the same PDF, or click **No** to finish and produce a single combined PDF containing all scanned pages.
-11. **Preview:**
-    * As pages are scanned, they are temporarily saved as PNG images and displayed in the preview area.
-    * Use the "Previous" and "Next" buttons to navigate through the preview of scanned images.
-12. **Load Images (for preview):**
-    * Click "Load Images" to load and preview existing PNG images from the currently selected output folder. This is useful for reviewing previously scanned temporary images if needed.
-13. **Output:**
-    * After scanning is complete and PDF(s) are generated, the temporary PNG files used for preview are automatically deleted.
-    * If the "Combined" document option was selected, the application will attempt to open the resulting PDF file using the system's default PDF viewer.
-14. **Settings Persistence:**
-    * Your last-used scan settings and output location are automatically saved and restored on next launch.
+## Usage
 
-## Configuration Details
+1. Launch Scandalous. The application automatically searches for scanners; use **Refresh** to search again.
+2. Select an output folder and enter a base filename without an extension.
+3. Select a scanner.
+4. Configure the color mode, paper source, document output, DPI, deskew, blank-page exclusion, and OCR settings.
+5. Select **Scan**.
+6. For a flatbed scan in Combined PDF mode, select **Yes** after each page to scan another page or **No** to finish.
 
-The core scan settings are managed through the `ScanConfiguration` class, which is populated based on UI selections:
+During scanning, Scandalous saves temporary PNG files in the operating system's temporary directory and displays the most recently scanned page. These temporary files are deleted when the scan finishes.
 
-* `OutputFolder`: The directory for saving output files.
-* `OutputBaseFileName`: The user-defined base name for output files.
-* `ColorMode`: `ScannerColorMode.Color`, `ScannerColorMode.Grayscale`, or `ScannerColorMode.BlackAndWhite`.
-* `DocumentOptions`: `DocumentOptions.Combined` or `DocumentOptions.Individual`.
-* `AutoDeskew`: `true` or `false`.
-* `ExcludeBlankPages`: `true` or `false`.
-* `ScanResolutionDPI`: User-selectable DPI (default 300).
-* `ScannerPaperSource`: User-selectable (`Auto`, `FeederSimplex`, `FeederDuplex`, `Flatbed`).
-* `OcrEnabled`: `true` or `false`.
-* `TessdataFolder`: Path to the folder containing Tesseract `.traineddata` files.
-* `TessdataLanguageCode`: The selected language code for OCR (e.g., "eng", "deu").
+### Output filenames
+
+- Combined output starts with `<base-name>.pdf`.
+- Individual output creates one PDF per page.
+- If a filename already exists, Scandalous adds a numeric suffix: `<base-name>_2.pdf`, `<base-name>_3.pdf`, and so on.
+
+After combined output is created, Scandalous attempts to open it in the system's default PDF viewer. Individual PDFs are not opened automatically.
+
+## Configuration
+
+`Scandalous.Core.Models.ScanConfiguration` contains the persisted scan settings:
+
+- `OutputFolder`
+- `OutputBaseFileName`
+- `ColorMode`
+- `DocumentOptions`
+- `AutoDeskew`
+- `ExcludeBlankPages`
+- `ScanResolutionDPI`
+- `ScannerPaperSource`
+- `OcrEnabled`
+- `TessdataFolder`
+- `TessdataLanguageCode`
+- `SelectedScannerName`
+- `LastKnownScannerUrl`
+
+Settings are saved when the main window closes. Window size, position, and state are saved separately.
 
 ## Input Validation
 
-The application incorporates validators to ensure robust handling of user inputs:
+`FolderValidator` checks that folder paths are non-empty and rejects invalid path segments, navigation segments (`.` and `..`), trailing spaces or periods, and segments longer than 255 characters. Windows reserved device names such as `CON`, `PRN`, and `NUL` are rejected on Windows.
 
-* **`FolderValidator`**:
-  * Ensures folder names are not null, empty, or whitespace.
-  * Checks for invalid path characters.
-  * Prevents the use of reserved system names (e.g., CON, PRN).
-  * Ensures folder names do not end with a space or a period.
-  * Checks for path traversal sequences (e.g., "..").
-  * Validates folder name length.
-* **`FileNameValidator`**:
-  * Ensures file names (or base file names) are not null, empty, or whitespace.
-  * Checks for invalid file name characters (e.g., `\ / : * ? " < > |`).
-  * Prevents the use of reserved system names.
-  * Ensures file names do not end with a space or a period.
-  * For base file names, ensures they do not contain periods (as extensions are handled separately).
-  * Validates file name length (max 255 characters for the name component).
+`FileNameValidator` checks that base filenames are non-empty, contain no extension separator or platform-invalid filename characters, do not end in a space or period, and are no longer than 255 characters. Windows reserved device names are rejected on Windows. The UI currently limits base filename input to 200 characters.
 
-## Project Structure (Key Components)
+## Project Structure
 
-* `Scandalous.Core.csproj`: A class library containing the core logic, services, validators, and configuration for scanning operations.
-* `Scandalous.csproj`: The Windows Forms application project, defining target framework (.NET 10), dependencies, and build settings for the WinForms UI.
-* `Scandalous.WPF.csproj`: The Windows Presentation Foundation application project, providing an alternative modern UI.
-* `Program.cs`: The main entry points for the desktop applications.
-* `FormScan.cs`: Implements the user interface, event handling, and orchestrates the scanning process based on user input.
-* `DocumentScanner.cs`: Contains the core logic for interacting with scanners via `NAPS2.Sdk`. It handles device discovery, scan execution, image processing, PDF export, and OCR integration.
-* `ScanConfiguration.cs`: A data class that holds all configuration parameters for a scan operation.
-* `PageScannedEventArgs.cs` (Defined within `DocumentScanner.cs` context or as a separate file, used by `PageScanned` event): Carries the file path of a newly scanned page image.
-* `FileNameValidator.cs`: A static utility class providing methods to validate file names against common operating system and file system rules.
-* `FolderValidator.cs`: A static utility class providing methods to validate folder names/paths.
+- `Scandalous.Avalonia/` — Avalonia desktop UI, view model, dialogs, and application entry point.
+- `Scandalous.Core/` — scanner integration, PDF and OCR services, configuration, models, and validation.
+- `Scandalous.Core.Tests/` — xUnit tests for the core library.
+- `Scandalous.sln` — solution containing the Avalonia app, core library, and tests.
+- `publish-mac.sh` — creates a self-contained macOS application bundle.
+- `ThirdPartyNotices.txt` — notices for third-party software distributed with the application.
 
 ## License
 
-© 2025-2026 Thomas Hernly. Released under GNU General Public License v3.0. See LICENSE file for details.
+Copyright 2025-2026 Thomas Hernly. Released under the [GNU General Public License v3.0](LICENSE).
