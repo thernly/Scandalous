@@ -4,6 +4,7 @@ using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
 using Scandalous.Core.Services;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -189,6 +190,22 @@ namespace Scandalous.Core.Tests.Services
             // Act & Assert
             var exception = await Assert.ThrowsAsync<ObjectDisposedException>(() => scanner.ScanDocuments(config, TestContext.Current.CancellationToken));
             Assert.Equal(nameof(DocumentScanner), exception.ObjectName);
+        }
+
+        [Theory]
+        [InlineData(ScannerPaperSize.Letter, "8.5x11 in")]
+        [InlineData(ScannerPaperSize.A4, "210x297 mm")]
+        [InlineData(ScannerPaperSize.Legal, "8.5x14 in")]
+        public void GetPageSize_MapsPaperSizeToNaps2PageSize(ScannerPaperSize input, string expected)
+        {
+            var method = typeof(DocumentScanner).GetMethod("GetPageSize", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.NotNull(method);
+
+            var result = method!.Invoke(null, [input]);
+
+            Assert.NotNull(result);
+            Assert.Equal(expected, result!.ToString());
         }
     }
 }

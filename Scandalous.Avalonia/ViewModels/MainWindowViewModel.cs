@@ -45,6 +45,7 @@ public partial class MainWindowViewModel : ObservableValidator
     [ObservableProperty] private bool excludeBlankPages = true;
     [ObservableProperty] private int selectedDpi = 300;
     [ObservableProperty] private ScannerPaperSource paperSource = ScannerPaperSource.FeederDuplex;
+    [ObservableProperty] private ScannerPaperSize paperSize = ScannerPaperSize.Letter;
     [ObservableProperty] private bool ocrEnabled = true;
     [ObservableProperty] private bool isOcrSettingsExpanded = false;
 
@@ -85,6 +86,7 @@ public partial class MainWindowViewModel : ObservableValidator
     // Display-name arrays for enum ComboBoxes
     public ScannerColorMode[] ColorModeOptions { get; } = [ScannerColorMode.Grayscale, ScannerColorMode.BlackAndWhite, ScannerColorMode.Color];
     public ScannerPaperSource[] PaperSourceOptions { get; } = [ScannerPaperSource.FeederDuplex, ScannerPaperSource.FeederSimplex, ScannerPaperSource.Flatbed];
+    public ScannerPaperSize[] PaperSizeOptions { get; } = [ScannerPaperSize.Letter, ScannerPaperSize.A4, ScannerPaperSize.Legal];
     public DocumentOptions[] DocumentOptionOptions { get; } = [DocumentOptions.Combined, DocumentOptions.Individual];
 
     public static string FormatColorMode(ScannerColorMode mode) => mode switch
@@ -102,6 +104,14 @@ public partial class MainWindowViewModel : ObservableValidator
         ScannerPaperSource.Flatbed => "Flatbed",
         ScannerPaperSource.Auto => "Auto",
         _ => source.ToString()
+    };
+
+    public static string FormatPaperSize(ScannerPaperSize size) => size switch
+    {
+        ScannerPaperSize.Letter => "Letter",
+        ScannerPaperSize.A4 => "A4",
+        ScannerPaperSize.Legal => "Legal",
+        _ => size.ToString()
     };
 
     public static string FormatDocumentOption(DocumentOptions option) => option switch
@@ -579,6 +589,7 @@ public partial class MainWindowViewModel : ObservableValidator
         FeederDuplex = PaperSource == ScannerPaperSource.FeederDuplex,
         FeederSimplex = PaperSource == ScannerPaperSource.FeederSimplex,
         Flatbed = PaperSource == ScannerPaperSource.Flatbed,
+        PaperSize = PaperSize,
         Dpi = SelectedDpi,
         OcrEnabled = OcrEnabled,
         TessdataFolder = TessdataFolder,
@@ -603,6 +614,7 @@ public partial class MainWindowViewModel : ObservableValidator
         PaperSource = uiState.FeederSimplex ? ScannerPaperSource.FeederSimplex
                     : uiState.Flatbed ? ScannerPaperSource.Flatbed
                     : ScannerPaperSource.FeederDuplex;
+        PaperSize = uiState.PaperSize;
         SelectedDpi = uiState.Dpi > 0 ? uiState.Dpi : 300;
         OcrEnabled = uiState.OcrEnabled;
         if (!string.IsNullOrEmpty(uiState.TessdataFolder)) TessdataFolder = uiState.TessdataFolder;

@@ -93,7 +93,7 @@ namespace Scandalous.Core.Services
 
         private static ScanOptions PrepareScanOptions(ScanDevice device, ScanConfiguration configuration)
         {
-            var options = GetScanOptions(device, configuration.ColorMode, configuration.ScannerPaperSource);
+            var options = GetScanOptions(device, configuration.ColorMode, configuration.ScannerPaperSource, configuration.PaperSize);
             options.AutoDeskew = configuration.AutoDeskew;
             options.ExcludeBlankPages = configuration.ExcludeBlankPages;
             options.Dpi = configuration.ScanResolutionDPI;
@@ -209,7 +209,7 @@ namespace Scandalous.Core.Services
         }
 
 
-        private static ScanOptions GetScanOptions(ScanDevice device, ScannerColorMode colorMode, ScannerPaperSource scannerPaperSource)
+        private static ScanOptions GetScanOptions(ScanDevice device, ScannerColorMode colorMode, ScannerPaperSource scannerPaperSource, ScannerPaperSize scannerPaperSize)
         {
             var options = new ScanOptions
             {
@@ -221,13 +221,20 @@ namespace Scandalous.Core.Services
                     ScannerPaperSource.FeederDuplex => PaperSource.Duplex,
                     _ => PaperSource.Auto // Default to Auto if unspecified or for ScannerPaperSource.Auto
                 },
-                PageSize = PageSize.Letter, // Consider making this configurable
+                PageSize = GetPageSize(scannerPaperSize),
                 Dpi = 300, // Default DPI, overridden by configuration.ScanResolutionDPI
                 BitDepth = GetBitDepth(colorMode),
             };
 
             return options;
         }
+
+        private static PageSize GetPageSize(ScannerPaperSize size) => size switch
+        {
+            ScannerPaperSize.A4 => PageSize.A4,
+            ScannerPaperSize.Legal => PageSize.Legal,
+            _ => PageSize.Letter
+        };
 
         private static BitDepth GetBitDepth(ScannerColorMode mode) => mode switch
         {

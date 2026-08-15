@@ -11,7 +11,8 @@ namespace Scandalous.Core.Models
         public ScanConfiguration(string outputFolder, string baseFileName, ScannerColorMode colorMode = ScannerColorMode.Grayscale,
                                  DocumentOptions documentOptions = DocumentOptions.Combined, bool autoDeskew = true,
                                  bool excludeBlankPages = true, int scanResolutionDpi = 300, ScannerPaperSource scannerPaperSource = ScannerPaperSource.Auto,
-                                 bool ocrEnabled = false, string tessdataFolder = "", string languageCode = "eng", string selectedScannerName = "")
+                                 bool ocrEnabled = false, string tessdataFolder = "", string languageCode = "eng", string selectedScannerName = "",
+                                 ScannerPaperSize paperSize = ScannerPaperSize.Letter)
         {            
             FolderValidator.Validate(outputFolder); 
             OutputFolder = outputFolder;
@@ -26,6 +27,7 @@ namespace Scandalous.Core.Models
             ExcludeBlankPages = excludeBlankPages;
             ScanResolutionDPI = scanResolutionDpi;
             this.ScannerPaperSource = scannerPaperSource;
+            PaperSize = paperSize;
             
             OcrEnabled = ocrEnabled;
             FolderValidator.Validate(tessdataFolder);
@@ -41,6 +43,7 @@ namespace Scandalous.Core.Models
         public bool ExcludeBlankPages { get; set; } = true;
         public int ScanResolutionDPI { get; set; } = 300;
         public ScannerPaperSource ScannerPaperSource { get; set; } = ScannerPaperSource.Auto;
+        public ScannerPaperSize PaperSize { get; set; } = ScannerPaperSize.Letter;
         public bool OcrEnabled { get; set; } = false; 
         public string TessdataFolder { get; set; } = string.Empty; // Path to Tesseract's tessdata folder, if OCR is enabled
         public string TessdataLanguageCode { get; set; } = "eng"; // Default language code for Tesseract OCR

@@ -11,6 +11,14 @@ namespace Scandalous.Avalonia.Tests.ViewModels;
 public class MainWindowViewModelTests
 {
     [Fact]
+    public void FormatPaperSize_ReturnsExpectedDisplayText()
+    {
+        Assert.Equal("Letter", MainWindowViewModel.FormatPaperSize(ScannerPaperSize.Letter));
+        Assert.Equal("A4", MainWindowViewModel.FormatPaperSize(ScannerPaperSize.A4));
+        Assert.Equal("Legal", MainWindowViewModel.FormatPaperSize(ScannerPaperSize.Legal));
+    }
+
+    [Fact]
     public void ScanCommand_IsDisabledWhenNoScannerIsSelected()
     {
         var viewModel = CreateViewModel();
@@ -309,6 +317,84 @@ public class MainWindowViewModelTests
             Cleanup(outputDir, tessdataDir);
         }
     }
+
+    [Fact]
+    public async Task SaveConfigurationAsync_PersistsSelectedPaperSize()
+    {
+        var scanner = Substitute.For<IDocumentScanner>();
+        scanner.GetScanDevicesAsync().Returns(new List<NAPS2.Scan.ScanDevice>());
+
+        var mapper = new ScanConfigurationMapper();
+        var configManager = Substitute.For<IConfigurationManager>();
+        configManager.LoadConfigurationAsync().Returns(new ScanConfiguration());
+
+        var languageService = Substitute.For<ILanguageCodeService>();
+        languageService.GetAvailableLanguageCodes(Arg.Any<string>(), Arg.Any<string>()).Returns(new List<string> { "eng" });
+        languageService.GetBestLanguageCode(Arg.Any<string>(), Arg.Any<string>()).Returns("eng");
+
+        var viewModel = new MainWindowViewModel(
+            scanner,
+            configManager,
+            mapper,
+            Substitute.For<IPdfService>(),
+            languageService,
+            CreateExceptionHandler());
+
+        viewModel.PaperSize = ScannerPaperSize.A4;
+
+        await viewModel.SaveConfigurationAsync();
+
+        await configManager.Received(1).SaveConfigurationAsync(Arg.Is<ScanConfiguration>(c => c.PaperSize == ScannerPaperSize.A4));
+    }
+
+    [Fact]
+    public async Task InitializeAsync_RestoresSavedPaperSize()
+    {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var tessdataDir = Directory.CreateTempSubdirectory("scandalous-tessdata-").FullName;
+        File.WriteAllBytes(Path.Combine(tessdataDir, "eng.traineddata"), [1]);
+
+        var scanner = Substitute.For<IDocumentScanner>();
+        scanner.GetScanDevicesAsync().Returns(new List<NAPS2.Scan.ScanDevice>());
+
+        var configManager = Substitute.For<IConfigurationManager>();
+        configManager.LoadConfigurationAsync().Returns(new ScanConfiguration());
+
+        var mapper = Substitute.For<IScanConfigurationMapper>();
+        mapper.BuildUIStateFromConfiguration(Arg.Any<ScanConfiguration>()).Returns(new UIState
+        {
+            OutputFolder = outputDir,
+            BaseFileName = "scan",
+            OcrEnabled = true,
+            TessdataFolder = tessdataDir,
+            SelectedLanguageCode = "eng",
+            PaperSize = ScannerPaperSize.A4
+        });
+
+        var languageService = Substitute.For<ILanguageCodeService>();
+        languageService.GetAvailableLanguageCodes(tessdataDir, Arg.Any<string>()).Returns(new List<string> { "eng" });
+        languageService.GetBestLanguageCode(tessdataDir, Arg.Any<string>()).Returns("eng");
+
+        var viewModel = new MainWindowViewModel(
+            scanner,
+            configManager,
+            mapper,
+            Substitute.For<IPdfService>(),
+            languageService,
+            CreateExceptionHandler());
+
+        try
+        {
+            await viewModel.InitializeAsync();
+
+            Assert.Equal(ScannerPaperSize.A4, viewModel.PaperSize);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
 
     [Theory]
     [InlineData("invoice", true)]

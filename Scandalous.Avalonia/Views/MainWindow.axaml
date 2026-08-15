@@ -74,7 +74,7 @@
                     <!-- Scan Options — inline, no Expander -->
                     <TextBlock Text="Scan Options" FontWeight="SemiBold" FontSize="12" />
 
-                      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,2,0,0"
+                      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="0,2,0,0"
                           IsEnabled="{Binding AreScanSettingsEnabled}">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Color Mode" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
                         <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ColorModeOptions}"
@@ -96,8 +96,18 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Document" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
-                        <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding DocumentOptionOptions}"
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Paper Size" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
+                        <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding PaperSizeOptions}"
+                                  SelectedItem="{Binding PaperSize}" HorizontalAlignment="Stretch" Margin="0,2">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="enums:ScannerPaperSize">
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Document" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
+                        <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding DocumentOptionOptions}"
                                   SelectedItem="{Binding DocumentOption}" HorizontalAlignment="Stretch" Margin="0,2">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="enums:DocumentOptions">
@@ -106,8 +116,8 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="DPI" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
-                        <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding DpiOptions}"
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="DPI" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
+                        <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding DpiOptions}"
                                   SelectedItem="{Binding SelectedDpi}" HorizontalAlignment="Stretch" Margin="0,2" />
                     </Grid>
 

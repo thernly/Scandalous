@@ -48,6 +48,7 @@ namespace Scandalous.Core.Tests.Services
             Assert.True(result.ExcludeBlankPages);
             Assert.Equal(300, result.ScanResolutionDPI);
             Assert.Equal(ScannerPaperSource.Auto, result.ScannerPaperSource);
+            Assert.Equal(ScannerPaperSize.Letter, result.PaperSize);
             Assert.False(result.OcrEnabled);
             Assert.Equal(string.Empty, result.TessdataFolder);
             Assert.Equal("eng", result.TessdataLanguageCode);
@@ -70,7 +71,8 @@ namespace Scandalous.Core.Tests.Services
                 scannerPaperSource: ScannerPaperSource.FeederDuplex,
                 ocrEnabled: true,
                 tessdataFolder: "C:\\tessdata",
-                languageCode: "deu"
+                languageCode: "deu",
+                paperSize: ScannerPaperSize.A4
             );
 
             // Act
@@ -86,6 +88,7 @@ namespace Scandalous.Core.Tests.Services
             Assert.Equal(originalConfig.ExcludeBlankPages, loadedConfig.ExcludeBlankPages);
             Assert.Equal(originalConfig.ScanResolutionDPI, loadedConfig.ScanResolutionDPI);
             Assert.Equal(originalConfig.ScannerPaperSource, loadedConfig.ScannerPaperSource);
+            Assert.Equal(originalConfig.PaperSize, loadedConfig.PaperSize);
             Assert.Equal(originalConfig.OcrEnabled, loadedConfig.OcrEnabled);
             Assert.Equal(originalConfig.TessdataFolder, loadedConfig.TessdataFolder);
             Assert.Equal(originalConfig.TessdataLanguageCode, loadedConfig.TessdataLanguageCode);
@@ -225,6 +228,7 @@ namespace Scandalous.Core.Tests.Services
             Assert.Equal("C:\\Test", result.OutputFolder);
             Assert.Equal(string.Empty, result.OutputBaseFileName);
             Assert.Equal(ScannerColorMode.Grayscale, result.ColorMode);
+            Assert.Equal(ScannerPaperSize.Letter, result.PaperSize);
         }
 
         [Fact]

@@ -23,7 +23,8 @@ namespace Scandalous.Core.Services
                 uiState.OcrEnabled,
                 uiState.TessdataFolder,
                 uiState.SelectedLanguageCode,
-                uiState.SelectedScannerName
+                uiState.SelectedScannerName,
+                uiState.PaperSize
             );
             config.LastKnownScannerUrl = uiState.SelectedScannerUrl;
             return config;
@@ -45,6 +46,7 @@ namespace Scandalous.Core.Services
                 FeederDuplex = configuration.ScannerPaperSource == ScannerPaperSource.FeederDuplex,
                 FeederSimplex = configuration.ScannerPaperSource == ScannerPaperSource.FeederSimplex,
                 Flatbed = configuration.ScannerPaperSource == ScannerPaperSource.Flatbed,
+                PaperSize = configuration.PaperSize,
                 Dpi = configuration.ScanResolutionDPI,
                 OcrEnabled = configuration.OcrEnabled,
                 TessdataFolder = configuration.TessdataFolder,

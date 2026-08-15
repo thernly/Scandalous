@@ -11,6 +11,7 @@ public class EnumDisplayConverter : IValueConverter
     {
         ScannerColorMode mode => MainWindowViewModel.FormatColorMode(mode),
         ScannerPaperSource source => MainWindowViewModel.FormatPaperSource(source),
+        ScannerPaperSize size => MainWindowViewModel.FormatPaperSize(size),
         DocumentOptions option => MainWindowViewModel.FormatDocumentOption(option),
         _ => value?.ToString() ?? string.Empty
     };
