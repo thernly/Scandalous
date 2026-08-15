@@ -63,6 +63,7 @@ public partial class MainWindowViewModel : ObservableValidator
 
     private string _selectedScannerUrl = string.Empty;
     [ObservableProperty] private string statusText = "Searching for scanners...";
+    [ObservableProperty] private StatusKind statusKind = StatusKind.Working;
     [ObservableProperty] private string completionText = string.Empty;
     [ObservableProperty] private string completionToolTip = string.Empty;
     [ObservableProperty] private string completionWarningText = string.Empty;
@@ -255,6 +256,12 @@ public partial class MainWindowViewModel : ObservableValidator
 
     private bool CanScan() => !IsScanning && !HasErrors;
 
+    private void SetStatus(StatusKind kind, string text)
+    {
+        this.StatusKind = kind;
+        StatusText = text;
+    }
+
     private void UpdateCompletionState(ScanResult? scanResult)
     {
         _lastSuccessfulScanResult = scanResult;
@@ -270,7 +277,7 @@ public partial class MainWindowViewModel : ObservableValidator
             CompletionToolTip = string.Empty;
             CanOpenPdf = false;
             CanOpenOutputFolder = false;
-            StatusText = CompletionText;
+            SetStatus(StatusKind.Warning, CompletionText);
             return;
         }
 
@@ -281,7 +288,7 @@ public partial class MainWindowViewModel : ObservableValidator
             CompletionToolTip = outputPath;
             CanOpenPdf = true;
             CanOpenOutputFolder = true;
-            StatusText = CompletionText;
+            SetStatus(StatusKind.Success, CompletionText);
             return;
         }
 
@@ -289,7 +296,7 @@ public partial class MainWindowViewModel : ObservableValidator
         CompletionToolTip = string.Join(Environment.NewLine, outputFiles);
         CanOpenPdf = false;
         CanOpenOutputFolder = true;
-        StatusText = CompletionText;
+        SetStatus(StatusKind.Success, CompletionText);
     }
 
     private void TryOpenPdf(string pdfFilePath)
@@ -334,7 +341,7 @@ public partial class MainWindowViewModel : ObservableValidator
         CanOpenPdf = false;
         CanOpenOutputFolder = false;
         _lastSuccessfulScanResult = null;
-        StatusText = "Connecting to scanner...";
+        SetStatus(StatusKind.Working, "Connecting to scanner...");
 
         var scanCts = new CancellationTokenSource();
         _scanCancellationSource = scanCts;
@@ -345,7 +352,7 @@ public partial class MainWindowViewModel : ObservableValidator
             {
                 PageCount++;
                 PreviewImagePath = e.ImageFilePath;
-                StatusText = $"Scanned {PageCount} page(s)...";
+                SetStatus(StatusKind.Working, $"Scanned {PageCount} page(s)...");
             });
         }
 
@@ -383,7 +390,7 @@ public partial class MainWindowViewModel : ObservableValidator
         }
         catch (OperationCanceledException)
         {
-            StatusText = "Scan canceled.";
+            SetStatus(StatusKind.Warning, "Scan canceled.");
         }
         catch (Exception ex)
         {
@@ -391,7 +398,7 @@ public partial class MainWindowViewModel : ObservableValidator
             var userMessage = string.IsNullOrWhiteSpace(result.UserMessage)
                 ? "Scanning could not be completed. Please try again."
                 : result.UserMessage;
-            StatusText = userMessage;
+            SetStatus(StatusKind.Error, userMessage);
             if (ShowErrorDialogAsync != null)
                 await ShowErrorDialogAsync("Error", userMessage);
         }
@@ -435,7 +442,7 @@ public partial class MainWindowViewModel : ObservableValidator
             return Task.CompletedTask;
 
         IsCancelRequested = true;
-        StatusText = "Canceling scan...";
+        SetStatus(StatusKind.Working, "Canceling scan...");
         _scanCancellationSource.Cancel();
         return Task.CompletedTask;
     }
@@ -471,7 +478,7 @@ public partial class MainWindowViewModel : ObservableValidator
     {
         try
         {
-            StatusText = "Searching for scanners...";
+            SetStatus(StatusKind.Working, "Searching for scanners...");
             var previousSelection = SelectedScanner;
             var devices = await _scanner.GetScanDevicesAsync();
             var names = devices.Select(d => d.Name).ToList();
@@ -492,13 +499,21 @@ public partial class MainWindowViewModel : ObservableValidator
             // Defer selection so the ComboBox has processed the new items.
             Dispatcher.UIThread.Post(() => SelectedScanner = target);
 
-            StatusText = Scanners.Count > 0
-                ? $"Found {Scanners.Count} scanner(s)."
-                : "No scanners found.";
+            if (Scanners.Count > 0)
+                SetStatus(StatusKind.Success, $"Found {Scanners.Count} scanner(s).");
+            else
+                SetStatus(StatusKind.Warning, "No scanners found. Check that the scanner is powered on and connected, then Refresh.");
         }
         catch (Exception ex)
         {
-            StatusText = $"Could not list scanners: {ex.Message}";
+            Debug.WriteLine($"[MainWindowViewModel] Scanner discovery failed. Exception: {ex}");
+            Console.Error.WriteLine($"[MainWindowViewModel] Scanner discovery failed. Exception: {ex.Message}");
+
+            var handled = _exceptionHandler.HandleScanException(ex);
+            var userMessage = handled.IsHandled && !string.IsNullOrWhiteSpace(handled.UserMessage)
+                ? handled.UserMessage
+                : "Could not search for scanners. Check that the scanner is connected, then try again.";
+            SetStatus(StatusKind.Error, userMessage);
         }
     }
 

@@ -23,7 +23,9 @@
             <StackPanel DockPanel.Dock="Bottom" Margin="12,4,12,8" Spacing="4">
                 <Separator Margin="0,0,0,4" />
                 <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
-                <TextBlock Text="{Binding StatusText}" FontSize="12" TextTrimming="CharacterEllipsis"
+                <TextBlock Text="{Binding StatusText}" FontSize="12"
+                           TextWrapping="Wrap"
+                           Foreground="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}}"
                            ToolTip.Tip="{Binding CompletionToolTip}" />
                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,0,0">
                     <Button Content="Open PDF" Command="{Binding OpenPdfCommand}" IsVisible="{Binding CanOpenPdf}" />

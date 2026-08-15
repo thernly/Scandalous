@@ -939,6 +939,187 @@ public class MainWindowViewModelTests
         }
     }
 
+    [Fact]
+    public void StatusKind_StartsAsWorkingWhileSearchingForScanners()
+    {
+        var viewModel = CreateViewModel();
+
+        Assert.Equal(StatusKind.Working, viewModel.StatusKind);
+        Assert.Equal("Searching for scanners...", viewModel.StatusText);
+    }
+
+    [Fact]
+    public async Task GetScannersCommand_WhenScannersAreFound_SetsSuccessStatus()
+    {
+        var scanner = Substitute.For<IDocumentScanner>();
+        scanner.GetScanDevicesAsync().Returns(Task.FromResult(new List<NAPS2.Scan.ScanDevice>
+        {
+            new(NAPS2.Scan.Driver.Escl, "device-1", "Office scanner")
+        }));
+        var viewModel = CreateViewModel(scanner);
+
+        await viewModel.GetScannersCommand.ExecuteAsync(null);
+
+        Assert.Equal(StatusKind.Success, viewModel.StatusKind);
+        Assert.Equal("Found 1 scanner(s).", viewModel.StatusText);
+    }
+
+    [Fact]
+    public async Task GetScannersCommand_WhenNoScannersAreFound_SetsWarningStatus()
+    {
+        var scanner = Substitute.For<IDocumentScanner>();
+        scanner.GetScanDevicesAsync().Returns(Task.FromResult(new List<NAPS2.Scan.ScanDevice>()));
+        var viewModel = CreateViewModel(scanner);
+
+        await viewModel.GetScannersCommand.ExecuteAsync(null);
+
+        Assert.Equal(StatusKind.Warning, viewModel.StatusKind);
+        Assert.StartsWith("No scanners found.", viewModel.StatusText);
+    }
+
+    [Fact]
+    public async Task GetScannersCommand_WhenDiscoveryFails_SetsErrorStatusWithoutRawExceptionText()
+    {
+        var scanner = Substitute.For<IDocumentScanner>();
+        scanner.GetScanDevicesAsync().Returns<Task<List<NAPS2.Scan.ScanDevice>>>(
+            _ => throw new InvalidOperationException("raw native failure 0x8007"));
+        var viewModel = CreateViewModel(scanner);
+
+        await viewModel.GetScannersCommand.ExecuteAsync(null);
+
+        Assert.Equal(StatusKind.Error, viewModel.StatusKind);
+        Assert.DoesNotContain("0x8007", viewModel.StatusText);
+        Assert.Equal("Could not search for scanners. Check that the scanner is connected, then try again.", viewModel.StatusText);
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhileScanIsRunning_SetsWorkingStatusAndResetsPageCount()
+    {
+        var scanner = new DeferredScanner();
+        var viewModel = CreateViewModel(scanner);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            var scanTask = viewModel.ScanCommand.ExecuteAsync(null);
+            await WaitUntilAsync(() => viewModel.IsScanning);
+
+            Assert.Equal(StatusKind.Working, viewModel.StatusKind);
+            Assert.Equal("Connecting to scanner...", viewModel.StatusText);
+            Assert.Equal(0, viewModel.PageCount);
+
+            scanner.Complete(new ScanResult { CapturedPageCount = 0, OutputFiles = [] });
+            await scanTask;
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenScanSucceeds_SetsSuccessStatus()
+    {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var outputPath = Path.Combine(outputDir, "report.pdf");
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 1,
+                OutputFiles = [outputPath]
+            }
+        };
+        var viewModel = CreateViewModel(scanner, pdfService: Substitute.For<IPdfService>());
+        var (_, tessdataDir) = SetValidState(viewModel);
+        viewModel.OutputFolder = outputDir;
+
+        try
+        {
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            Assert.Equal(StatusKind.Success, viewModel.StatusKind);
+            Assert.Equal("report.pdf was created.", viewModel.StatusText);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenZeroPagesAreReturned_SetsWarningStatus()
+    {
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult { CapturedPageCount = 0, OutputFiles = [] }
+        };
+        var viewModel = CreateViewModel(scanner);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            Assert.Equal(StatusKind.Warning, viewModel.StatusKind);
+            Assert.Equal("No pages were captured. No PDF was created.", viewModel.StatusText);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenScannerFails_SetsErrorStatus()
+    {
+        var scanner = new EventTrackingScanner { ScanException = new InvalidOperationException("raw driver text") };
+        var viewModel = CreateViewModel(scanner);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            viewModel.ShowErrorDialogAsync = (_, _) => Task.CompletedTask;
+
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            Assert.Equal(StatusKind.Error, viewModel.StatusKind);
+            Assert.Equal("Scanning could not be completed.", viewModel.StatusText);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task CancelCommand_SetsWorkingThenWarningStatus()
+    {
+        var scanner = new CancelAwareScanner();
+        var viewModel = CreateViewModel(scanner);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            var scanTask = viewModel.ScanCommand.ExecuteAsync(null);
+            await WaitUntilAsync(() => viewModel.IsScanning);
+
+            await viewModel.CancelCommand.ExecuteAsync(null);
+
+            Assert.Equal(StatusKind.Working, viewModel.StatusKind);
+            Assert.Equal("Canceling scan...", viewModel.StatusText);
+
+            await scanTask;
+
+            Assert.Equal(StatusKind.Warning, viewModel.StatusKind);
+            Assert.Equal("Scan canceled.", viewModel.StatusText);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
     private static (string OutputDir, string TessdataDir) SetValidState(MainWindowViewModel viewModel)
     {
         var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;

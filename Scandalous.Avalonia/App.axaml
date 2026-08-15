@@ -13,5 +13,6 @@
         <conv:PathToBitmapConverter x:Key="PathToBitmapConverter" />
         <conv:IsNullConverter x:Key="IsNullConverter" />
         <conv:IsNotNullConverter x:Key="IsNotNullConverter" />
+        <conv:StatusKindToBrushConverter x:Key="StatusKindToBrushConverter" />
     </Application.Resources>
 </Application>
