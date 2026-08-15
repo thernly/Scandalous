@@ -274,13 +274,19 @@ public partial class MainWindowViewModel : ObservableValidator
                     ShowYesNoDialogAsync("More Pages?", "Place the next page on the flatbed and click Yes, or click No to finish."));
             }
 
-            var outputPath = await _scanner.ScanDocuments(configuration, scanCts.Token, promptForMorePages: promptForMorePages);
+            var scanResult = await _scanner.ScanDocuments(configuration, scanCts.Token, promptForMorePages: promptForMorePages);
             StatusText = "Scanning completed.";
 
             if (configuration.DocumentOptions == DocumentOptions.Combined
-                && !string.IsNullOrEmpty(outputPath)
-                && _pdfService.PdfFileExists(outputPath))
-                _pdfService.OpenPdfFile(outputPath, configuration.OutputFolder);
+                && scanResult.OutputFiles.Count == 1)
+            {
+                var outputPath = scanResult.OutputFiles[0];
+                if (!string.IsNullOrWhiteSpace(outputPath)
+                    && _pdfService.PdfFileExists(outputPath))
+                {
+                    _pdfService.OpenPdfFile(outputPath, configuration.OutputFolder);
+                }
+            }
         }
         catch (OperationCanceledException)
         {

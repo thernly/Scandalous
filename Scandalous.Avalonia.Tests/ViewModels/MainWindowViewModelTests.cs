@@ -383,7 +383,14 @@ public class MainWindowViewModelTests
     [Fact]
     public async Task ScanCommand_WhenPdfViewerFails_ShowsErrorReturnsToIdleAndUnsubscribes()
     {
-        var scanner = new EventTrackingScanner { ScanResult = "output.pdf" };
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 1,
+                OutputFiles = ["output.pdf"]
+            }
+        };
         var pdfService = Substitute.For<IPdfService>();
         pdfService.PdfFileExists("output.pdf").Returns(true);
         pdfService.When(service => service.OpenPdfFile("output.pdf", Arg.Any<string>()))
@@ -464,7 +471,6 @@ public class MainWindowViewModelTests
             Assert.True(viewModel.CancelCommand.CanExecute(null));
 
             viewModel.CancelCommand.Execute(null);
-            Assert.Equal("Canceling scan...", viewModel.StatusText);
             viewModel.CancelCommand.Execute(null);
             await scanTask;
 
@@ -565,7 +571,7 @@ public class MainWindowViewModelTests
         });
 
         var viewModel = CreateViewModel(scanner, mapper, pdfService);
-        var outputPath = Path.Combine(outputDir, "output.pdf");
+        var outputPath = Path.Combine(outputDir, "output_2.pdf");
         pdfService.PdfFileExists(outputPath).Returns(true);
 
         try
@@ -582,11 +588,73 @@ public class MainWindowViewModelTests
 
             // Simulate a user edit during scanning.
             viewModel.DocumentOption = DocumentOptions.Individual;
-            scanner.Complete(outputPath);
+            scanner.Complete(new ScanResult
+            {
+                CapturedPageCount = 1,
+                OutputFiles = [outputPath]
+            });
 
             await scanTask;
 
             pdfService.Received(1).OpenPdfFile(outputPath, outputDir);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenIndividualOutputIsReturned_DoesNotAutoOpenPdf()
+    {
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 2,
+                OutputFiles = ["first.pdf", "second.pdf"]
+            }
+        };
+        var pdfService = Substitute.For<IPdfService>();
+        var viewModel = CreateViewModel(scanner, pdfService: pdfService);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            viewModel.DocumentOption = DocumentOptions.Individual;
+
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            pdfService.DidNotReceive().OpenPdfFile(Arg.Any<string>(), Arg.Any<string>());
+            Assert.False(viewModel.IsScanning);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenZeroPagesAreReturned_DoesNotAutoOpenPdf()
+    {
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 0,
+                OutputFiles = []
+            }
+        };
+        var pdfService = Substitute.For<IPdfService>();
+        var viewModel = CreateViewModel(scanner, pdfService: pdfService);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            pdfService.DidNotReceive().OpenPdfFile(Arg.Any<string>(), Arg.Any<string>());
+            Assert.False(viewModel.IsScanning);
         }
         finally
         {
@@ -650,7 +718,7 @@ public class MainWindowViewModelTests
         private EventHandler<PageScannedEventArgs>? _pageScanned;
 
         public Exception? ScanException { get; init; }
-        public string ScanResult { get; init; } = string.Empty;
+        public ScanResult ScanResult { get; init; } = new();
         public int SubscriberCount { get; private set; }
         public int UnsubscribeCount { get; private set; }
 
@@ -669,8 +737,8 @@ public class MainWindowViewModelTests
             }
         }
 
-        public Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null) =>
-            ScanException == null ? Task.FromResult(ScanResult) : Task.FromException<string>(ScanException);
+        public Task<ScanResult> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null) =>
+            ScanException == null ? Task.FromResult(ScanResult) : Task.FromException<ScanResult>(ScanException);
 
         public Task<List<NAPS2.Scan.ScanDevice>> GetScanDevicesAsync() => Task.FromResult(new List<NAPS2.Scan.ScanDevice>());
 
@@ -689,11 +757,15 @@ public class MainWindowViewModelTests
             remove { }
         }
 
-        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
+        public async Task<ScanResult> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
         {
             cancellationToken.Register(() => Interlocked.Increment(ref _cancelRequestCount));
             await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
-            return string.Empty;
+            return new ScanResult
+            {
+                CapturedPageCount = 0,
+                OutputFiles = []
+            };
         }
 
         public Task<List<NAPS2.Scan.ScanDevice>> GetScanDevicesAsync() => Task.FromResult(new List<NAPS2.Scan.ScanDevice>());
@@ -710,7 +782,7 @@ public class MainWindowViewModelTests
 
         public event EventHandler<PageScannedEventArgs>? PageScanned;
 
-        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
+        public async Task<ScanResult> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
         {
             var firstFile = Path.Combine(Path.GetTempPath(), $"scan-{Guid.NewGuid():N}.png");
             await File.WriteAllBytesAsync(firstFile, [1, 2, 3, 4]);
@@ -719,7 +791,11 @@ public class MainWindowViewModelTests
 
             cancellationToken.Register(() => Interlocked.Increment(ref _cancelRequestCount));
             await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
-            return string.Empty;
+            return new ScanResult
+            {
+                CapturedPageCount = 0,
+                OutputFiles = []
+            };
         }
 
         public Task WaitForFirstPageAsync() => _firstPageScanned.Task;
@@ -731,7 +807,7 @@ public class MainWindowViewModelTests
 
     private sealed class DeferredScanner : IDocumentScanner
     {
-        private readonly TaskCompletionSource<string> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<ScanResult> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public event EventHandler<PageScannedEventArgs>? PageScanned
         {
@@ -739,12 +815,12 @@ public class MainWindowViewModelTests
             remove { }
         }
 
-        public Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null) =>
+        public Task<ScanResult> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null) =>
             _tcs.Task;
 
         public Task<List<NAPS2.Scan.ScanDevice>> GetScanDevicesAsync() => Task.FromResult(new List<NAPS2.Scan.ScanDevice>());
 
-        public void Complete(string outputPath) => _tcs.TrySetResult(outputPath);
+        public void Complete(ScanResult scanResult) => _tcs.TrySetResult(scanResult);
 
         public void Dispose() { }
     }

@@ -22,7 +22,7 @@ namespace Scandalous.Core.Services
             _scanController = new ScanController(_scanningContext);
         }
 
-        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
+        public async Task<ScanResult> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
         {
             ThrowIfDisposed();
 
@@ -54,8 +54,7 @@ namespace Scandalous.Core.Services
             var options = PrepareScanOptions(device, configuration);
             List<ProcessedImage> processedImages = [];
             var imageFiles = new List<string>();
-
-            string outputPath = string.Empty;
+            var outputFiles = new List<string>();
             try
             {
                 (var batch, var batchFiles) = await PerformScanning(options, cancellationToken);
@@ -76,15 +75,20 @@ namespace Scandalous.Core.Services
 
                 if (processedImages.Count > 0)
                 {
-                    outputPath = await ExportImagesToPdfAsync(configuration, processedImages, cancellationToken);
+                    outputFiles = await ExportImagesToPdfAsync(configuration, processedImages, cancellationToken);
                 }
+
+                return new ScanResult
+                {
+                    CapturedPageCount = processedImages.Count,
+                    OutputFiles = outputFiles
+                };
             }
             finally
             {
                 CleanUpImageFiles(imageFiles);
                 DisposeImages(processedImages);
             }
-            return outputPath;
         }
 
         private static ScanOptions PrepareScanOptions(ScanDevice device, ScanConfiguration configuration)
@@ -117,7 +121,7 @@ namespace Scandalous.Core.Services
             return (images, tempFiles);
         }
 
-        private async Task<string> ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
+        private async Task<List<string>> ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -131,17 +135,19 @@ namespace Scandalous.Core.Services
                 cancellationToken.ThrowIfCancellationRequested();
                 var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
                 await ExportPdfAsync(pdfExporter, outputFile, processedImages, configuration.OcrEnabled, configuration.TessdataLanguageCode);
-                return outputFile;
+                return [outputFile];
             }
             else
             {
+                var outputFiles = new List<string>(processedImages.Count);
                 foreach (var image in processedImages)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
                     await ExportPdfAsync(pdfExporter, outputFile, [image], configuration.OcrEnabled, configuration.TessdataLanguageCode);
+                    outputFiles.Add(outputFile);
                 }
-                return string.Empty;
+                return outputFiles;
             }
         }
 
