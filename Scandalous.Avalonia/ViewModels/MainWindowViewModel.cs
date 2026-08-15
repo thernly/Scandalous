@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -26,10 +28,14 @@ public partial class MainWindowViewModel : ObservableValidator
     public Func<string, string, Task>? ShowErrorDialogAsync { get; set; }
 
     // Observable properties
-    [ObservableProperty] private string outputFolder = string.Empty;
+    [ObservableProperty]
+    [CustomValidation(typeof(MainWindowViewModel), nameof(ValidateOutputFolder))]
+    private string outputFolder = string.Empty;
+
     [ObservableProperty]
     [CustomValidation(typeof(MainWindowViewModel), nameof(ValidateBaseFilename))]
     private string baseFilename = "output";
+
     [ObservableProperty] private ScannerColorMode colorMode = ScannerColorMode.Grayscale;
     [ObservableProperty] private DocumentOptions documentOption = DocumentOptions.Combined;
     [ObservableProperty] private bool autoDeskew = true;
@@ -37,9 +43,19 @@ public partial class MainWindowViewModel : ObservableValidator
     [ObservableProperty] private int selectedDpi = 300;
     [ObservableProperty] private ScannerPaperSource paperSource = ScannerPaperSource.FeederDuplex;
     [ObservableProperty] private bool ocrEnabled = true;
-    [ObservableProperty] private string tessdataFolder = string.Empty;
-    [ObservableProperty] private string selectedLanguageCode = "eng";
-    [ObservableProperty] private string selectedScanner = string.Empty;
+
+    [ObservableProperty]
+    [CustomValidation(typeof(MainWindowViewModel), nameof(ValidateTessdataFolder))]
+    private string tessdataFolder = string.Empty;
+
+    [ObservableProperty]
+    [CustomValidation(typeof(MainWindowViewModel), nameof(ValidateSelectedLanguageCode))]
+    private string selectedLanguageCode = "eng";
+
+    [ObservableProperty]
+    [CustomValidation(typeof(MainWindowViewModel), nameof(ValidateSelectedScanner))]
+    private string selectedScanner = string.Empty;
+
     private string _selectedScannerUrl = string.Empty;
     [ObservableProperty] private string statusText = "Searching for scanners...";
     [ObservableProperty] private bool isScanning = false;
@@ -86,6 +102,56 @@ public partial class MainWindowViewModel : ObservableValidator
         return isValid ? ValidationResult.Success : new ValidationResult(errorMessage);
     }
 
+    public static ValidationResult? ValidateSelectedScanner(string? value, ValidationContext context)
+    {
+        if (string.IsNullOrEmpty(value))
+            return new ValidationResult("A scanner must be selected.");
+        return ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateOutputFolder(string? value, ValidationContext context)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return new ValidationResult("Output folder is required.");
+        if (!Directory.Exists(value))
+            return new ValidationResult("Output folder does not exist.");
+        return ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateTessdataFolder(string? value, ValidationContext context)
+    {
+        var vm = (MainWindowViewModel)context.ObjectInstance;
+        if (!vm.OcrEnabled) return ValidationResult.Success;
+        if (string.IsNullOrWhiteSpace(value))
+            return new ValidationResult("Tessdata folder is required when OCR is enabled.");
+        if (!Directory.Exists(value))
+            return new ValidationResult("Tessdata folder does not exist.");
+        return ValidationResult.Success;
+    }
+
+    public static ValidationResult? ValidateSelectedLanguageCode(string? value, ValidationContext context)
+    {
+        var vm = (MainWindowViewModel)context.ObjectInstance;
+        if (!vm.OcrEnabled) return ValidationResult.Success;
+        if (string.IsNullOrWhiteSpace(value))
+            return new ValidationResult("An OCR language must be selected.");
+        if (!string.IsNullOrWhiteSpace(vm.TessdataFolder))
+        {
+            var path = Path.Combine(vm.TessdataFolder, $"{value}.traineddata");
+            if (!File.Exists(path))
+                return new ValidationResult($"{value}.traineddata not found in tessdata folder.");
+        }
+        return ValidationResult.Success;
+    }
+
+    private string GetFirstErrorMessage(string propertyName) =>
+        GetErrors(propertyName).OfType<ValidationResult>().FirstOrDefault()?.ErrorMessage ?? string.Empty;
+
+    public string OutputFolderError => GetFirstErrorMessage(nameof(OutputFolder));
+    public string SelectedScannerError => GetFirstErrorMessage(nameof(SelectedScanner));
+    public string TessdataFolderError => GetFirstErrorMessage(nameof(TessdataFolder));
+    public string SelectedLanguageCodeError => GetFirstErrorMessage(nameof(SelectedLanguageCode));
+
     public MainWindowViewModel(
         IDocumentScanner scanner,
         IConfigurationManager configManager,
@@ -101,17 +167,50 @@ public partial class MainWindowViewModel : ObservableValidator
         _languageService = languageService;
         _exceptionHandler = exceptionHandler;
 
+        ErrorsChanged += (_, e) =>
+        {
+            ScanCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(OutputFolderError));
+            OnPropertyChanged(nameof(SelectedScannerError));
+            OnPropertyChanged(nameof(TessdataFolderError));
+            OnPropertyChanged(nameof(SelectedLanguageCodeError));
+        };
+
         // Set platform-appropriate defaults
         OutputFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         TessdataFolder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? @"C:\tessdata"
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "tessdata");
+
+        ValidateAllProperties();
     }
 
     partial void OnIsScanningChanged(bool value) => ScanCommand.NotifyCanExecuteChanged();
-    partial void OnSelectedScannerChanged(string value) => ScanCommand.NotifyCanExecuteChanged();
 
-    private bool CanScan() => !IsScanning && !string.IsNullOrEmpty(SelectedScanner);
+    partial void OnOutputFolderChanged(string value) => ValidateProperty(value, nameof(OutputFolder));
+    partial void OnBaseFilenameChanged(string value) => ValidateProperty(value, nameof(BaseFilename));
+    partial void OnSelectedScannerChanged(string value) => ValidateProperty(value, nameof(SelectedScanner));
+
+    partial void OnOcrEnabledChanged(bool value)
+    {
+        ValidateProperty(TessdataFolder, nameof(TessdataFolder));
+        ValidateProperty(SelectedLanguageCode, nameof(SelectedLanguageCode));
+    }
+
+    partial void OnTessdataFolderChanged(string value)
+    {
+        ValidateProperty(value, nameof(TessdataFolder));
+        if (OcrEnabled)
+            ValidateProperty(SelectedLanguageCode, nameof(SelectedLanguageCode));
+    }
+
+    partial void OnSelectedLanguageCodeChanged(string value)
+    {
+        if (OcrEnabled)
+            ValidateProperty(value, nameof(SelectedLanguageCode));
+    }
+
+    private bool CanScan() => !IsScanning && !HasErrors;
 
     [RelayCommand(CanExecute = nameof(CanScan))]
     private async Task ScanAsync()
@@ -119,9 +218,6 @@ public partial class MainWindowViewModel : ObservableValidator
         IsScanning = true;
         PageCount = 0;
         StatusText = "Connecting to scanner...";
-
-        var uiState = BuildUIState();
-        var configuration = _configMapper.BuildConfigurationFromUIState(uiState);
 
         void PageScannedHandler(object? sender, Core.Models.PageScannedEventArgs e)
         {
@@ -133,38 +229,49 @@ public partial class MainWindowViewModel : ObservableValidator
             });
         }
 
-        _scanner.PageScanned += PageScannedHandler;
-
-        Func<Task<bool>>? promptForMorePages = null;
-        if (PaperSource == ScannerPaperSource.Flatbed && DocumentOption == DocumentOptions.Combined && ShowYesNoDialogAsync != null)
-        {
-            promptForMorePages = () => Dispatcher.UIThread.InvokeAsync(() =>
-                ShowYesNoDialogAsync("More Pages?", "Place the next page on the flatbed and click Yes, or click No to finish."));
-        }
-
-        string outputPath = string.Empty;
+        var pageHandlerSubscribed = false;
         try
         {
-            outputPath = await _scanner.ScanDocuments(configuration, promptForMorePages: promptForMorePages);
+            var uiState = BuildUIState();
+            var configuration = _configMapper.BuildConfigurationFromUIState(uiState);
+
+            _scanner.PageScanned += PageScannedHandler;
+            pageHandlerSubscribed = true;
+
+            Func<Task<bool>>? promptForMorePages = null;
+            if (PaperSource == ScannerPaperSource.Flatbed && DocumentOption == DocumentOptions.Combined && ShowYesNoDialogAsync != null)
+            {
+                promptForMorePages = () => Dispatcher.UIThread.InvokeAsync(() =>
+                    ShowYesNoDialogAsync("More Pages?", "Place the next page on the flatbed and click Yes, or click No to finish."));
+            }
+
+            var outputPath = await _scanner.ScanDocuments(configuration, promptForMorePages: promptForMorePages);
             StatusText = "Scanning completed.";
+
+            if (DocumentOption == DocumentOptions.Combined && !string.IsNullOrEmpty(outputPath) && _pdfService.PdfFileExists(outputPath))
+                _pdfService.OpenPdfFile(outputPath, configuration.OutputFolder);
         }
         catch (Exception ex)
         {
             var result = _exceptionHandler.HandleScanException(ex);
-            StatusText = result.UserMessage;
+            var userMessage = string.IsNullOrWhiteSpace(result.UserMessage)
+                ? "Scanning could not be completed. Please try again."
+                : result.UserMessage;
+            StatusText = userMessage;
             if (ShowErrorDialogAsync != null)
-                await ShowErrorDialogAsync("Error", result.UserMessage);
+                await ShowErrorDialogAsync("Error", userMessage);
         }
         finally
         {
-            _scanner.PageScanned -= PageScannedHandler;
-            IsScanning = false;
-        }
-
-        if (DocumentOption == DocumentOptions.Combined && !string.IsNullOrEmpty(outputPath))
-        {
-            if (_pdfService.PdfFileExists(outputPath))
-                _pdfService.OpenPdfFile(outputPath, configuration.OutputFolder);
+            try
+            {
+                if (pageHandlerSubscribed)
+                    _scanner.PageScanned -= PageScannedHandler;
+            }
+            finally
+            {
+                IsScanning = false;
+            }
         }
     }
 

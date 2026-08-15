@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Scandalous.Avalonia.ViewModels"
         xmlns:enums="using:Scandalous.Core.Enums"
+        xmlns:conv="using:Avalonia.Data.Converters"
         x:Class="Scandalous.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="Scandalous"
@@ -38,6 +39,9 @@
                         <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseOutputFolderCommand}"
                                 Padding="8,4" FontSize="12" />
                     </Grid>
+                    <TextBlock Text="{Binding OutputFolderError}"
+                               Foreground="Red" FontSize="11"
+                               IsVisible="{Binding OutputFolderError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
                     <TextBox Text="{Binding BaseFilename}" MaxLength="200" PlaceholderText="Base filename" Padding="6,4" />
 
                     <Separator Margin="0,2" />
@@ -51,6 +55,9 @@
                         <Button Grid.Column="1" Content="Refresh" Command="{Binding GetScannersCommand}"
                                 Padding="8,4" FontSize="12" />
                     </Grid>
+                    <TextBlock Text="{Binding SelectedScannerError}"
+                               Foreground="Red" FontSize="11"
+                               IsVisible="{Binding SelectedScannerError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
 
                     <Separator Margin="0,2" />
 
@@ -110,9 +117,15 @@
                                 <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseTessdataFolderCommand}"
                                         Padding="8,4" FontSize="12" />
                             </Grid>
+                            <TextBlock Text="{Binding TessdataFolderError}"
+                                       Foreground="Red" FontSize="11"
+                                       IsVisible="{Binding TessdataFolderError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
                             <ComboBox ItemsSource="{Binding AvailableLanguageCodes}"
                                       SelectedItem="{Binding SelectedLanguageCode}"
                                       HorizontalAlignment="Stretch" />
+                            <TextBlock Text="{Binding SelectedLanguageCodeError}"
+                                       Foreground="Red" FontSize="11"
+                                       IsVisible="{Binding SelectedLanguageCodeError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
                         </StackPanel>
                     </Expander>
 

@@ -102,7 +102,7 @@ namespace Scandalous.Core.Services
                 _ => new ScanExceptionResult
                 {
                     IsHandled = false,
-                    UserMessage = $"An unexpected error occurred: {ex.Message}",
+                    UserMessage = "An unexpected error occurred while scanning. Please try again.",
                     ShouldRetry = false,
                     OriginalException = ex
                 }
@@ -119,4 +119,4 @@ namespace Scandalous.Core.Services
             return HandleScanException(ex).ShouldRetry;
         }
     }
-} 
+}
