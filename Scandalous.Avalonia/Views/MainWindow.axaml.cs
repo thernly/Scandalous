@@ -42,9 +42,9 @@ public partial class MainWindow : Window
             return result.FirstOrDefault()?.Path.LocalPath;
         };
 
-        vm.ShowYesNoDialogAsync = async (title, message) =>
+        vm.ShowConfirmationDialogAsync = async (title, message, primaryLabel, secondaryLabel) =>
         {
-            var dialog = MessageDialog.CreateYesNo(title, message);
+            var dialog = MessageDialog.CreateConfirmation(title, message, primaryLabel, secondaryLabel);
             return await dialog.ShowDialog<bool>(this);
         };
 

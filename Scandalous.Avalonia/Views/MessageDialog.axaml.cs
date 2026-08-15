@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 
 namespace Scandalous.Avalonia.Views;
@@ -8,31 +9,39 @@ public partial class MessageDialog : Window
     public MessageDialog()
     {
         InitializeComponent();
+        Opened += (_, _) => PrimaryButton.Focus(NavigationMethod.Tab);
     }
 
-    public static MessageDialog CreateYesNo(string title, string message)
+    /// <summary>
+    /// Creates a two-button dialog. The primary button is the default action (Enter) and
+    /// returns true; the secondary button is the cancel action (Escape) and returns false.
+    /// </summary>
+    public static MessageDialog CreateConfirmation(string title, string message, string primaryLabel, string secondaryLabel)
     {
         var dialog = new MessageDialog();
         dialog.Title = title;
         dialog.MessageText.Text = message;
-        dialog.YesButton.IsVisible = true;
-        dialog.NoButton.IsVisible = true;
-        dialog.OkButton.IsVisible = false;
+        dialog.PrimaryButton.Content = primaryLabel;
+        dialog.SecondaryButton.Content = secondaryLabel;
+        dialog.SecondaryButton.IsVisible = true;
         return dialog;
     }
 
-    public static MessageDialog CreateOk(string title, string message)
+    /// <summary>
+    /// Creates a single-button acknowledgement dialog. The button acts as both the default
+    /// and the cancel action so that Enter and Escape both dismiss it.
+    /// </summary>
+    public static MessageDialog CreateOk(string title, string message, string buttonLabel = "OK")
     {
         var dialog = new MessageDialog();
         dialog.Title = title;
         dialog.MessageText.Text = message;
-        dialog.YesButton.IsVisible = false;
-        dialog.NoButton.IsVisible = false;
-        dialog.OkButton.IsVisible = true;
+        dialog.PrimaryButton.Content = buttonLabel;
+        dialog.PrimaryButton.IsCancel = true;
+        dialog.SecondaryButton.IsVisible = false;
         return dialog;
     }
 
-    private void YesButton_Click(object? sender, RoutedEventArgs e) => Close(true);
-    private void NoButton_Click(object? sender, RoutedEventArgs e) => Close(false);
-    private void OkButton_Click(object? sender, RoutedEventArgs e) => Close(true);
+    private void PrimaryButton_Click(object? sender, RoutedEventArgs e) => Close(true);
+    private void SecondaryButton_Click(object? sender, RoutedEventArgs e) => Close(false);
 }

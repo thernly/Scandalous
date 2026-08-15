@@ -1120,6 +1120,37 @@ public class MainWindowViewModelTests
         }
     }
 
+    [Fact]
+    public void GetContinuationPrompt_ForFlatbedCombined_UsesScanNextPageAndFinishLabels()
+    {
+        var prompt = MainWindowViewModel.GetContinuationPrompt(new ScanConfiguration
+        {
+            ScannerPaperSource = ScannerPaperSource.Flatbed,
+            DocumentOptions = DocumentOptions.Combined
+        });
+
+        Assert.NotNull(prompt);
+        Assert.Equal("Scan Next Page", prompt.PrimaryLabel);
+        Assert.Equal("Finish", prompt.SecondaryLabel);
+        Assert.DoesNotContain("Yes", prompt.Message);
+        Assert.DoesNotContain("No", prompt.Message);
+    }
+
+    [Theory]
+    [InlineData(ScannerPaperSource.FeederDuplex, DocumentOptions.Combined)]
+    [InlineData(ScannerPaperSource.FeederSimplex, DocumentOptions.Combined)]
+    [InlineData(ScannerPaperSource.Flatbed, DocumentOptions.Individual)]
+    public void GetContinuationPrompt_ForOtherConfigurations_ReturnsNull(
+        ScannerPaperSource paperSource,
+        DocumentOptions documentOptions)
+    {
+        Assert.Null(MainWindowViewModel.GetContinuationPrompt(new ScanConfiguration
+        {
+            ScannerPaperSource = paperSource,
+            DocumentOptions = documentOptions
+        }));
+    }
+
     private static (string OutputDir, string TessdataDir) SetValidState(MainWindowViewModel viewModel)
     {
         var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;

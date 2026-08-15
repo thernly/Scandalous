@@ -15,6 +15,9 @@ using Scandalous.Core.Validation;
 
 namespace Scandalous.Avalonia.ViewModels;
 
+/// <summary>Text for a mid-scan confirmation dialog, including its explicit button labels.</summary>
+public sealed record ContinuationPrompt(string Title, string Message, string PrimaryLabel, string SecondaryLabel);
+
 public partial class MainWindowViewModel : ObservableValidator
 {
     private readonly IDocumentScanner _scanner;
@@ -27,7 +30,11 @@ public partial class MainWindowViewModel : ObservableValidator
     // Folder picker / dialog callbacks set by the View
     public Func<Task<string?>>? PickOutputFolderAsync { get; set; }
     public Func<Task<string?>>? PickTessdataFolderAsync { get; set; }
-    public Func<string, string, Task<bool>>? ShowYesNoDialogAsync { get; set; }
+    /// <summary>
+    /// Shows a confirmation dialog: (title, message, primaryButtonLabel, secondaryButtonLabel).
+    /// Returns true when the primary action was chosen.
+    /// </summary>
+    public Func<string, string, string, string, Task<bool>>? ShowConfirmationDialogAsync { get; set; }
     public Func<string, string, Task>? ShowErrorDialogAsync { get; set; }
 
     // Observable properties
@@ -256,6 +263,22 @@ public partial class MainWindowViewModel : ObservableValidator
 
     private bool CanScan() => !IsScanning && !HasErrors;
 
+    public static readonly ContinuationPrompt FlatbedContinuationPrompt = new(
+        "More Pages?",
+        "Place the next page on the flatbed, then choose Scan Next Page. Choose Finish to create the PDF.",
+        "Scan Next Page",
+        "Finish");
+
+    /// <summary>
+    /// Returns the mid-scan continuation prompt for a configuration, or null when the scan
+    /// does not need one.
+    /// </summary>
+    public static ContinuationPrompt? GetContinuationPrompt(ScanConfiguration configuration) =>
+        configuration.ScannerPaperSource == ScannerPaperSource.Flatbed
+        && configuration.DocumentOptions == DocumentOptions.Combined
+            ? FlatbedContinuationPrompt
+            : null;
+
     private void SetStatus(StatusKind kind, string text)
     {
         this.StatusKind = kind;
@@ -366,12 +389,16 @@ public partial class MainWindowViewModel : ObservableValidator
             pageHandlerSubscribed = true;
 
             Func<Task<bool>>? promptForMorePages = null;
-            if (configuration.ScannerPaperSource == ScannerPaperSource.Flatbed
-                && configuration.DocumentOptions == DocumentOptions.Combined
-                && ShowYesNoDialogAsync != null)
+            var continuationPrompt = GetContinuationPrompt(configuration);
+            if (continuationPrompt != null && ShowConfirmationDialogAsync != null)
             {
+                var showDialog = ShowConfirmationDialogAsync;
                 promptForMorePages = () => Dispatcher.UIThread.InvokeAsync(() =>
-                    ShowYesNoDialogAsync("More Pages?", "Place the next page on the flatbed and click Yes, or click No to finish."));
+                    showDialog(
+                        continuationPrompt.Title,
+                        continuationPrompt.Message,
+                        continuationPrompt.PrimaryLabel,
+                        continuationPrompt.SecondaryLabel));
             }
 
             var scanResult = await _scanner.ScanDocuments(configuration, scanCts.Token, promptForMorePages: promptForMorePages);
