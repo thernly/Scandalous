@@ -120,7 +120,7 @@ OCR requires Tesseract language data files:
 3. Expand **OCR Settings** in Scandalous, enable OCR, and choose that directory.
 4. Select a language found in the directory.
 
-> **Current limitation:** PDF export currently invokes OCR with the `eng` language code even if another language is selected. Keep `eng.traineddata` in the configured directory. Other language selections are persisted but are not yet passed to the exporter.
+> Scandalous uses the selected OCR language during PDF export. If a previous language is available, it is reused; otherwise it prefers `eng` when the file is present and falls back to the first available model in the tessdata folder.
 
 ## Usage
 

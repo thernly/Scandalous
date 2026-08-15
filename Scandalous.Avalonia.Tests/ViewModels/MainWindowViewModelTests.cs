@@ -176,6 +176,115 @@ public class MainWindowViewModelTests
         }
     }
 
+    [Fact]
+    public async Task InitializeAsync_WhenNoLanguageModelsExist_DisablesOcrAndShowsMessage()
+    {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var tessdataDir = Directory.CreateTempSubdirectory("scandalous-tessdata-").FullName;
+        var scanner = Substitute.For<IDocumentScanner>();
+        scanner.GetScanDevicesAsync().Returns(new List<NAPS2.Scan.ScanDevice>());
+
+        var configManager = Substitute.For<IConfigurationManager>();
+        configManager.LoadConfigurationAsync().Returns(new ScanConfiguration
+        {
+            OutputFolder = outputDir,
+            OutputBaseFileName = "scan",
+            OcrEnabled = true,
+            TessdataFolder = tessdataDir,
+            TessdataLanguageCode = "eng"
+        });
+
+        var mapper = Substitute.For<IScanConfigurationMapper>();
+        mapper.BuildUIStateFromConfiguration(Arg.Any<ScanConfiguration>()).Returns(new UIState
+        {
+            OutputFolder = outputDir,
+            BaseFileName = "scan",
+            OcrEnabled = true,
+            TessdataFolder = tessdataDir,
+            SelectedLanguageCode = "eng"
+        });
+
+        var languageService = Substitute.For<ILanguageCodeService>();
+        languageService.GetAvailableLanguageCodes(tessdataDir, Arg.Any<string>()).Returns(new List<string>());
+        languageService.GetBestLanguageCode(tessdataDir, Arg.Any<string>()).Returns(string.Empty);
+
+        var viewModel = new MainWindowViewModel(
+            scanner,
+            configManager,
+            mapper,
+            Substitute.For<IPdfService>(),
+            languageService,
+            CreateExceptionHandler());
+
+        try
+        {
+            await viewModel.InitializeAsync();
+
+            Assert.False(viewModel.OcrEnabled);
+            Assert.Equal(string.Empty, viewModel.SelectedLanguageCode);
+            Assert.Equal("No OCR languages found", viewModel.NoOcrLanguagesText);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task InitializeAsync_WhenEnglishLanguageExists_SelectsEnglishByDefault()
+    {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var tessdataDir = Directory.CreateTempSubdirectory("scandalous-tessdata-").FullName;
+        File.WriteAllText(Path.Combine(tessdataDir, "eng.traineddata"), "");
+        File.WriteAllText(Path.Combine(tessdataDir, "deu.traineddata"), "");
+
+        var scanner = Substitute.For<IDocumentScanner>();
+        scanner.GetScanDevicesAsync().Returns(new List<NAPS2.Scan.ScanDevice>());
+
+        var configManager = Substitute.For<IConfigurationManager>();
+        configManager.LoadConfigurationAsync().Returns(new ScanConfiguration
+        {
+            OutputFolder = outputDir,
+            OutputBaseFileName = "scan",
+            OcrEnabled = true,
+            TessdataFolder = tessdataDir,
+            TessdataLanguageCode = string.Empty
+        });
+
+        var mapper = Substitute.For<IScanConfigurationMapper>();
+        mapper.BuildUIStateFromConfiguration(Arg.Any<ScanConfiguration>()).Returns(new UIState
+        {
+            OutputFolder = outputDir,
+            BaseFileName = "scan",
+            OcrEnabled = true,
+            TessdataFolder = tessdataDir,
+            SelectedLanguageCode = string.Empty
+        });
+
+        var languageService = new LanguageCodeService(configManager);
+
+        var viewModel = new MainWindowViewModel(
+            scanner,
+            configManager,
+            mapper,
+            Substitute.For<IPdfService>(),
+            languageService,
+            CreateExceptionHandler());
+
+        try
+        {
+            await viewModel.InitializeAsync();
+
+            Assert.Equal(new[] { "deu", "eng" }, viewModel.AvailableLanguageCodes.ToArray());
+            Assert.Equal("eng", viewModel.SelectedLanguageCode);
+            Assert.True(viewModel.OcrEnabled);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
     [Theory]
     [InlineData("invoice", true)]
     [InlineData("invoice.pdf", false)]

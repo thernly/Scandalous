@@ -126,6 +126,9 @@
                                       SelectedItem="{Binding SelectedLanguageCode}"
                                       HorizontalAlignment="Stretch"
                                       IsEnabled="{Binding OcrEnabled}" />
+                            <TextBlock Text="{Binding NoOcrLanguagesText}"
+                                       Foreground="Orange" FontSize="11"
+                                       IsVisible="{Binding NoOcrLanguagesText, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
                             <TextBlock Text="{Binding SelectedLanguageCodeError}"
                                        Foreground="Red" FontSize="11"
                                        IsVisible="{Binding SelectedLanguageCodeError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />

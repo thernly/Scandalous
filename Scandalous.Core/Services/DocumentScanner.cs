@@ -124,7 +124,7 @@ namespace Scandalous.Core.Services
             if (configuration.DocumentOptions == DocumentOptions.Combined)
             {
                 var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
-                await ExportPdfAsync(pdfExporter, outputFile, processedImages, configuration.OcrEnabled);
+                await ExportPdfAsync(pdfExporter, outputFile, processedImages, configuration.OcrEnabled, configuration.TessdataLanguageCode);
                 return outputFile;
             }
             else
@@ -133,7 +133,7 @@ namespace Scandalous.Core.Services
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
-                    await ExportPdfAsync(pdfExporter, outputFile, [image], configuration.OcrEnabled);
+                    await ExportPdfAsync(pdfExporter, outputFile, [image], configuration.OcrEnabled, configuration.TessdataLanguageCode);
                 }
                 return string.Empty;
             }
@@ -155,11 +155,12 @@ namespace Scandalous.Core.Services
             }
         }
 
-        private static async Task ExportPdfAsync(PdfExporter pdfExporter, string outputFile, IList<ProcessedImage> images, bool ocrEnabled)
+        private static async Task ExportPdfAsync(PdfExporter pdfExporter, string outputFile, IList<ProcessedImage> images, bool ocrEnabled, string languageCode)
         {
             if (ocrEnabled)
             {
-                await pdfExporter.Export(outputFile, images, ocrParams: new OcrParams("eng"));
+                var selectedLanguage = string.IsNullOrWhiteSpace(languageCode) ? "eng" : languageCode;
+                await pdfExporter.Export(outputFile, images, ocrParams: new OcrParams(selectedLanguage));
             }
             else
             {

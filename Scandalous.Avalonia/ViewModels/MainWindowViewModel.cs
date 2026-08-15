@@ -152,6 +152,7 @@ public partial class MainWindowViewModel : ObservableValidator
     public string SelectedScannerError => GetFirstErrorMessage(nameof(SelectedScanner));
     public string TessdataFolderError => GetFirstErrorMessage(nameof(TessdataFolder));
     public string SelectedLanguageCodeError => GetFirstErrorMessage(nameof(SelectedLanguageCode));
+    public string NoOcrLanguagesText => AvailableLanguageCodes.Count == 0 ? "No OCR languages found" : string.Empty;
 
     public MainWindowViewModel(
         IDocumentScanner scanner,
@@ -336,7 +337,7 @@ public partial class MainWindowViewModel : ObservableValidator
     public async Task InitializeAsync()
     {
         var config = await _configManager.LoadConfigurationAsync();
-        var uiState = _configMapper.BuildUIStateFromConfiguration(config);
+        var uiState = _configMapper.BuildUIStateFromConfiguration(config) ?? new UIState();
         ApplyUIState(uiState);
 
         RefreshLanguageCodes();
@@ -355,15 +356,34 @@ public partial class MainWindowViewModel : ObservableValidator
 
     private void RefreshLanguageCodes()
     {
-        var codes = _languageService.GetAvailableLanguageCodes(TessdataFolder, SelectedLanguageCode);
+        var previousCode = SelectedLanguageCode;
+        var codes = _languageService.GetAvailableLanguageCodes(TessdataFolder, previousCode);
+
         AvailableLanguageCodes.Clear();
+        SelectedLanguageCode = string.Empty; // ensure a real property change when we re-assign below
         foreach (var code in codes)
             AvailableLanguageCodes.Add(code);
 
-        if (!string.IsNullOrEmpty(SelectedLanguageCode) && AvailableLanguageCodes.Contains(SelectedLanguageCode))
+        OnPropertyChanged(nameof(NoOcrLanguagesText));
+
+        if (AvailableLanguageCodes.Count == 0)
+        {
+            if (OcrEnabled)
+                OcrEnabled = false;
             return;
-        if (AvailableLanguageCodes.Count > 0)
-            SelectedLanguageCode = AvailableLanguageCodes[0];
+        }
+
+        var exactMatch = AvailableLanguageCodes.FirstOrDefault(code =>
+            string.Equals(code, previousCode, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(exactMatch))
+        {
+            SelectedLanguageCode = exactMatch;
+            return;
+        }
+
+        var bestLanguageCode = _languageService.GetBestLanguageCode(TessdataFolder, previousCode);
+        if (!string.IsNullOrWhiteSpace(bestLanguageCode))
+            SelectedLanguageCode = bestLanguageCode;
     }
 
     private UIState BuildUIState() => new UIState
@@ -390,6 +410,9 @@ public partial class MainWindowViewModel : ObservableValidator
 
     private void ApplyUIState(UIState uiState)
     {
+        if (uiState == null)
+            return;
+
         if (!string.IsNullOrEmpty(uiState.OutputFolder)) OutputFolder = uiState.OutputFolder;
         if (!string.IsNullOrEmpty(uiState.BaseFileName)) BaseFilename = uiState.BaseFileName;
         AutoDeskew = uiState.AutoDeskew;

@@ -109,7 +109,10 @@ namespace Scandalous.Core.Services
                 return new List<string>();
             }
 
-            return languageCodes;
+            return languageCodes
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(code => code, StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         public async Task SaveWindowStateAsync(WindowStateInfo windowState)

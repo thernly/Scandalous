@@ -122,6 +122,51 @@ namespace Scandalous.Core.Tests.Services
         }
 
         [Fact]
+        public void GetInstalledTessdataLanguageCodes_SortsCodesOrdinalCaseInsensitive()
+        {
+            // Arrange
+            var tempDir = Directory.CreateTempSubdirectory("scandalous-tessdata-");
+            try
+            {
+                File.WriteAllText(Path.Combine(tempDir.FullName, "fra.traineddata"), "");
+                File.WriteAllText(Path.Combine(tempDir.FullName, "eng.traineddata"), "");
+                File.WriteAllText(Path.Combine(tempDir.FullName, "deu.traineddata"), "");
+
+                var configManager = new ConfigurationManager();
+
+                // Act
+                var result = configManager.GetInstalledTessdataLanguageCodes(tempDir.FullName);
+
+                // Assert
+                Assert.Equal(new[] { "deu", "eng", "fra" }, result);
+            }
+            finally
+            {
+                Directory.Delete(tempDir.FullName, recursive: true);
+            }
+        }
+
+        [Fact]
+        public void GetBestLanguageCode_ReturnsCanonicalAvailableCodeForCaseInsensitiveMatch()
+        {
+            var tempDir = Directory.CreateTempSubdirectory("scandalous-tessdata-");
+            try
+            {
+                File.WriteAllText(Path.Combine(tempDir.FullName, "eng.traineddata"), "");
+                File.WriteAllText(Path.Combine(tempDir.FullName, "deu.traineddata"), "");
+
+                var service = new LanguageCodeService(new ConfigurationManager());
+
+                Assert.Equal("eng", service.GetBestLanguageCode(tempDir.FullName, "ENG"));
+                Assert.Equal("deu", service.GetBestLanguageCode(tempDir.FullName, "DEU"));
+            }
+            finally
+            {
+                Directory.Delete(tempDir.FullName, recursive: true);
+            }
+        }
+
+        [Fact]
         public async Task LoadConfigurationAsync_WithCorruptedJsonFile_ReturnsDefaultConfiguration()
         {
             // Arrange
