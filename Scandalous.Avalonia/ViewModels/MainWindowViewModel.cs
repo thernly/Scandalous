@@ -43,6 +43,7 @@ public partial class MainWindowViewModel : ObservableValidator
     [ObservableProperty] private int selectedDpi = 300;
     [ObservableProperty] private ScannerPaperSource paperSource = ScannerPaperSource.FeederDuplex;
     [ObservableProperty] private bool ocrEnabled = true;
+    [ObservableProperty] private bool isOcrSettingsExpanded = false;
 
     [ObservableProperty]
     [CustomValidation(typeof(MainWindowViewModel), nameof(ValidateTessdataFolder))]

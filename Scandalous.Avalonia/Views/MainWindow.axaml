@@ -108,10 +108,11 @@
                     <Separator Margin="0,2" />
 
                     <!-- OCR Settings -->
-                    <Expander Header="OCR Settings" IsExpanded="{Binding OcrEnabled}" Padding="0">
+                    <Expander Header="OCR Settings" IsExpanded="{Binding IsOcrSettingsExpanded}" Padding="0">
                         <StackPanel Spacing="6" Margin="0,6,0,0">
                             <CheckBox Content="Enable OCR" IsChecked="{Binding OcrEnabled}" />
-                            <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Tessdata folder" FontSize="12" IsEnabled="{Binding OcrEnabled}" />
+                            <Grid ColumnDefinitions="*,Auto" IsEnabled="{Binding OcrEnabled}">
                                 <TextBlock Grid.Column="0" Text="{Binding TessdataFolder}" TextTrimming="CharacterEllipsis"
                                            VerticalAlignment="Center" Opacity="0.7" FontSize="12" Margin="0,0,6,0" />
                                 <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseTessdataFolderCommand}"
@@ -120,9 +121,11 @@
                             <TextBlock Text="{Binding TessdataFolderError}"
                                        Foreground="Red" FontSize="11"
                                        IsVisible="{Binding TessdataFolderError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="OCR language" FontSize="12" IsEnabled="{Binding OcrEnabled}" />
                             <ComboBox ItemsSource="{Binding AvailableLanguageCodes}"
                                       SelectedItem="{Binding SelectedLanguageCode}"
-                                      HorizontalAlignment="Stretch" />
+                                      HorizontalAlignment="Stretch"
+                                      IsEnabled="{Binding OcrEnabled}" />
                             <TextBlock Text="{Binding SelectedLanguageCodeError}"
                                        Foreground="Red" FontSize="11"
                                        IsVisible="{Binding SelectedLanguageCodeError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />

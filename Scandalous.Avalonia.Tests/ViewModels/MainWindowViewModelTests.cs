@@ -103,6 +103,79 @@ public class MainWindowViewModelTests
         }
     }
 
+    [Fact]
+    public void OcrSettingsExpanded_ToggleDoesNotChangeOcrEnabled()
+    {
+        var viewModel = CreateViewModel();
+
+        Assert.False(viewModel.IsOcrSettingsExpanded);
+        Assert.True(viewModel.OcrEnabled);
+
+        viewModel.IsOcrSettingsExpanded = true;
+        Assert.True(viewModel.OcrEnabled);
+        Assert.True(viewModel.IsOcrSettingsExpanded);
+
+        viewModel.IsOcrSettingsExpanded = false;
+        Assert.True(viewModel.OcrEnabled);
+        Assert.False(viewModel.IsOcrSettingsExpanded);
+
+        viewModel.OcrEnabled = false;
+        viewModel.IsOcrSettingsExpanded = true;
+        Assert.False(viewModel.OcrEnabled);
+        Assert.True(viewModel.IsOcrSettingsExpanded);
+
+        viewModel.IsOcrSettingsExpanded = false;
+        Assert.False(viewModel.OcrEnabled);
+        Assert.False(viewModel.IsOcrSettingsExpanded);
+    }
+
+    [Fact]
+    public void DisablingOcr_DoesNotCollapseSettingsOrClearSelections()
+    {
+        var viewModel = CreateViewModel();
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            viewModel.IsOcrSettingsExpanded = true;
+
+            viewModel.OcrEnabled = false;
+
+            Assert.True(viewModel.IsOcrSettingsExpanded);
+            Assert.Equal(tessdataDir, viewModel.TessdataFolder);
+            Assert.Equal("eng", viewModel.SelectedLanguageCode);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public void ReEnablingOcr_PreservesPreviousTessdataAndLanguageSelection()
+    {
+        var viewModel = CreateViewModel();
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            var previousFolder = viewModel.TessdataFolder;
+            var previousLanguage = viewModel.SelectedLanguageCode;
+
+            viewModel.OcrEnabled = false;
+            Assert.Equal(previousFolder, viewModel.TessdataFolder);
+            Assert.Equal(previousLanguage, viewModel.SelectedLanguageCode);
+
+            viewModel.OcrEnabled = true;
+            Assert.Equal(previousFolder, viewModel.TessdataFolder);
+            Assert.Equal(previousLanguage, viewModel.SelectedLanguageCode);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
     [Theory]
     [InlineData("invoice", true)]
     [InlineData("invoice.pdf", false)]
