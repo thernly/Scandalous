@@ -60,8 +60,12 @@ public partial class MainWindowViewModel : ObservableValidator
     private string _selectedScannerUrl = string.Empty;
     [ObservableProperty] private string statusText = "Searching for scanners...";
     [ObservableProperty] private bool isScanning = false;
+    [ObservableProperty] private bool isCancelRequested = false;
     [ObservableProperty] private string? previewImagePath = null;
     [ObservableProperty] private int pageCount = 0;
+    private CancellationTokenSource? _scanCancellationSource;
+
+    public bool CanCancelScan => IsScanning && !IsCancelRequested;
 
     // Static/collection properties
     public int[] DpiOptions { get; } = [150, 300, 600, 1200];
@@ -191,7 +195,15 @@ public partial class MainWindowViewModel : ObservableValidator
     partial void OnIsScanningChanged(bool value)
     {
         ScanCommand.NotifyCanExecuteChanged();
+        CancelCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(AreScanSettingsEnabled));
+        OnPropertyChanged(nameof(CanCancelScan));
+    }
+
+    partial void OnIsCancelRequestedChanged(bool value)
+    {
+        CancelCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanCancelScan));
     }
 
     partial void OnOutputFolderChanged(string value) => ValidateProperty(value, nameof(OutputFolder));
@@ -223,8 +235,12 @@ public partial class MainWindowViewModel : ObservableValidator
     private async Task ScanAsync()
     {
         IsScanning = true;
+        IsCancelRequested = false;
         PageCount = 0;
         StatusText = "Connecting to scanner...";
+
+        var scanCts = new CancellationTokenSource();
+        _scanCancellationSource = scanCts;
 
         void PageScannedHandler(object? sender, Core.Models.PageScannedEventArgs e)
         {
@@ -254,13 +270,17 @@ public partial class MainWindowViewModel : ObservableValidator
                     ShowYesNoDialogAsync("More Pages?", "Place the next page on the flatbed and click Yes, or click No to finish."));
             }
 
-            var outputPath = await _scanner.ScanDocuments(configuration, promptForMorePages: promptForMorePages);
+            var outputPath = await _scanner.ScanDocuments(configuration, scanCts.Token, promptForMorePages: promptForMorePages);
             StatusText = "Scanning completed.";
 
             if (configuration.DocumentOptions == DocumentOptions.Combined
                 && !string.IsNullOrEmpty(outputPath)
                 && _pdfService.PdfFileExists(outputPath))
                 _pdfService.OpenPdfFile(outputPath, configuration.OutputFolder);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText = "Scan canceled.";
         }
         catch (Exception ex)
         {
@@ -281,9 +301,24 @@ public partial class MainWindowViewModel : ObservableValidator
             }
             finally
             {
+                _scanCancellationSource?.Dispose();
+                _scanCancellationSource = null;
+                IsCancelRequested = false;
                 IsScanning = false;
             }
         }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanCancelScan))]
+    private Task CancelAsync()
+    {
+        if (!IsScanning || _scanCancellationSource == null || IsCancelRequested)
+            return Task.CompletedTask;
+
+        IsCancelRequested = true;
+        StatusText = "Canceling scan...";
+        _scanCancellationSource.Cancel();
+        return Task.CompletedTask;
     }
 
     [RelayCommand]

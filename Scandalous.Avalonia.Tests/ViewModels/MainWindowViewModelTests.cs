@@ -414,6 +414,99 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task CancelCommand_WhenScanIsRunning_CancelsAndShowsCanceledStatusWithoutError()
+    {
+        var scanner = new CancelAwareScanner();
+        var viewModel = CreateViewModel(scanner);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+        string? errorMessage = null;
+
+        try
+        {
+            viewModel.ShowErrorDialogAsync = (_, message) =>
+            {
+                errorMessage = message;
+                return Task.CompletedTask;
+            };
+
+            var scanTask = viewModel.ScanCommand.ExecuteAsync(null);
+            await WaitUntilAsync(() => viewModel.IsScanning);
+
+            Assert.True(viewModel.CanCancelScan);
+            Assert.True(viewModel.CancelCommand.CanExecute(null));
+
+            viewModel.CancelCommand.Execute(null);
+            await scanTask;
+
+            Assert.False(viewModel.IsScanning);
+            Assert.Equal("Scan canceled.", viewModel.StatusText);
+            Assert.Null(errorMessage);
+            Assert.Equal(1, scanner.CancelRequestCount);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task CancelCommand_WhenCancellationIsRequested_DoesNotCreateMultipleOperations()
+    {
+        var scanner = new CancelAwareScanner();
+        var viewModel = CreateViewModel(scanner);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            var scanTask = viewModel.ScanCommand.ExecuteAsync(null);
+            await WaitUntilAsync(() => viewModel.IsScanning);
+
+            Assert.True(viewModel.CancelCommand.CanExecute(null));
+
+            viewModel.CancelCommand.Execute(null);
+            Assert.Equal("Canceling scan...", viewModel.StatusText);
+            viewModel.CancelCommand.Execute(null);
+            await scanTask;
+
+            Assert.False(viewModel.CancelCommand.CanExecute(null));
+            Assert.Equal(1, scanner.CancelRequestCount);
+            Assert.False(viewModel.IsScanning);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task CancelCommand_AfterFirstPageCapture_CancelsBeforeNextPageCompletes()
+    {
+        var scanner = new CancelAfterFirstPageScanner();
+        var viewModel = CreateViewModel(scanner);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            var scanTask = viewModel.ScanCommand.ExecuteAsync(null);
+            await WaitUntilAsync(() => viewModel.IsScanning);
+            await scanner.WaitForFirstPageAsync();
+
+            Assert.True(viewModel.CancelCommand.CanExecute(null));
+            viewModel.CancelCommand.Execute(null);
+
+            await scanTask;
+
+            Assert.Equal("Scan canceled.", viewModel.StatusText);
+            Assert.False(viewModel.IsScanning);
+            Assert.Equal(1, scanner.CancelRequestCount);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
     public async Task ScanCommand_UsesCapturedConfigurationForCompletionDecisions()
     {
         var scanner = new DeferredScanner();
@@ -541,6 +634,58 @@ public class MainWindowViewModelTests
 
         public Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null) =>
             ScanException == null ? Task.FromResult(ScanResult) : Task.FromException<string>(ScanException);
+
+        public Task<List<NAPS2.Scan.ScanDevice>> GetScanDevicesAsync() => Task.FromResult(new List<NAPS2.Scan.ScanDevice>());
+
+        public void Dispose() { }
+    }
+
+    private sealed class CancelAwareScanner : IDocumentScanner
+    {
+        private int _cancelRequestCount;
+
+        public int CancelRequestCount => _cancelRequestCount;
+
+        public event EventHandler<PageScannedEventArgs>? PageScanned
+        {
+            add { }
+            remove { }
+        }
+
+        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
+        {
+            cancellationToken.Register(() => Interlocked.Increment(ref _cancelRequestCount));
+            await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            return string.Empty;
+        }
+
+        public Task<List<NAPS2.Scan.ScanDevice>> GetScanDevicesAsync() => Task.FromResult(new List<NAPS2.Scan.ScanDevice>());
+
+        public void Dispose() { }
+    }
+
+    private sealed class CancelAfterFirstPageScanner : IDocumentScanner
+    {
+        private int _cancelRequestCount;
+        private readonly TaskCompletionSource<bool> _firstPageScanned = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public int CancelRequestCount => _cancelRequestCount;
+
+        public event EventHandler<PageScannedEventArgs>? PageScanned;
+
+        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
+        {
+            var firstFile = Path.Combine(Path.GetTempPath(), $"scan-{Guid.NewGuid():N}.png");
+            await File.WriteAllBytesAsync(firstFile, [1, 2, 3, 4]);
+            PageScanned?.Invoke(this, new PageScannedEventArgs(firstFile));
+            _firstPageScanned.TrySetResult(true);
+
+            cancellationToken.Register(() => Interlocked.Increment(ref _cancelRequestCount));
+            await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            return string.Empty;
+        }
+
+        public Task WaitForFirstPageAsync() => _firstPageScanned.Task;
 
         public Task<List<NAPS2.Scan.ScanDevice>> GetScanDevicesAsync() => Task.FromResult(new List<NAPS2.Scan.ScanDevice>());
 

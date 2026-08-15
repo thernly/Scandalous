@@ -141,13 +141,20 @@
                         </StackPanel>
                     </Expander>
 
-                    <!-- Scan button -->
-                    <Button Content="Scan" Command="{Binding ScanCommand}"
-                            Classes="accent"
-                            HorizontalAlignment="Stretch"
-                            FontSize="14"
-                            Padding="0,8"
-                            Margin="0,4,0,0" />
+                    <!-- Scan / cancel buttons -->
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                        <Button Grid.Column="0" Content="Scan" Command="{Binding ScanCommand}"
+                                Classes="accent"
+                                HorizontalAlignment="Stretch"
+                                FontSize="14"
+                                Padding="0,8" />
+                        <Button Grid.Column="1" Content="Cancel" Command="{Binding CancelCommand}"
+                                IsEnabled="{Binding CanCancelScan}"
+                                FontSize="14"
+                                Padding="0,8"
+                                MinWidth="110"
+                                Margin="8,0,0,0" />
+                    </Grid>
 
                 </StackPanel>
             </ScrollViewer>

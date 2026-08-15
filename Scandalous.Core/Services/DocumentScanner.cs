@@ -98,12 +98,15 @@ namespace Scandalous.Core.Services
 
         private async Task<(List<ProcessedImage> scannedImages, List<string> tempFiles)> PerformScanning(ScanOptions scanOptions, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var images = new List<ProcessedImage>();
             var tempFiles = new List<string>();
             var tempFolder = Path.GetTempPath();
 
             await foreach (var image in _scanController.Scan(scanOptions, cancellationToken).WithCancellation(cancellationToken))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 images.Add(image);
                 Guid guid = Guid.CreateVersion7();
                 var outputFile = Path.Combine(tempFolder, $"scan-{guid}.png");
@@ -116,6 +119,8 @@ namespace Scandalous.Core.Services
 
         private async Task<string> ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (configuration.OcrEnabled)
             {
                 _scanningContext.OcrEngine = TesseractOcrEngine.Bundled(configuration.TessdataFolder);
@@ -123,6 +128,7 @@ namespace Scandalous.Core.Services
             var pdfExporter = new PdfExporter(_scanningContext);
             if (configuration.DocumentOptions == DocumentOptions.Combined)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
                 await ExportPdfAsync(pdfExporter, outputFile, processedImages, configuration.OcrEnabled, configuration.TessdataLanguageCode);
                 return outputFile;
