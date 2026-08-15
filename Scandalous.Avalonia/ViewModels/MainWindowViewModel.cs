@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -8,6 +9,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Scandalous.Core.Enums;
+using Scandalous.Core.Models;
 using Scandalous.Core.Services;
 using Scandalous.Core.Validation;
 
@@ -60,12 +62,18 @@ public partial class MainWindowViewModel : ObservableValidator
 
     private string _selectedScannerUrl = string.Empty;
     [ObservableProperty] private string statusText = "Searching for scanners...";
+    [ObservableProperty] private string completionText = string.Empty;
+    [ObservableProperty] private string completionToolTip = string.Empty;
+    [ObservableProperty] private string completionWarningText = string.Empty;
+    [ObservableProperty] private bool canOpenPdf = false;
+    [ObservableProperty] private bool canOpenOutputFolder = false;
     [ObservableProperty] private bool isScanning = false;
     [ObservableProperty] private bool isCancelRequested = false;
     [ObservableProperty] private string? previewImagePath = null;
     [ObservableProperty] private int pageCount = 0;
     private CancellationTokenSource? _scanCancellationSource;
     private TaskCompletionSource<object?>? _activeScanCompletion;
+    private ScanResult? _lastSuccessfulScanResult;
 
     public bool CanCancelScan => IsScanning && !IsCancelRequested;
 
@@ -208,6 +216,10 @@ public partial class MainWindowViewModel : ObservableValidator
         OnPropertyChanged(nameof(CanCancelScan));
     }
 
+    partial void OnCanOpenPdfChanged(bool value) => OpenPdfCommand.NotifyCanExecuteChanged();
+
+    partial void OnCanOpenOutputFolderChanged(bool value) => OpenOutputFolderCommand.NotifyCanExecuteChanged();
+
     partial void OnOutputFolderChanged(string value) => ValidateProperty(value, nameof(OutputFolder));
     partial void OnBaseFilenameChanged(string value) => ValidateProperty(value, nameof(BaseFilename));
     partial void OnSelectedScannerChanged(string value) => ValidateProperty(value, nameof(SelectedScanner));
@@ -233,6 +245,71 @@ public partial class MainWindowViewModel : ObservableValidator
 
     private bool CanScan() => !IsScanning && !HasErrors;
 
+    private void UpdateCompletionState(ScanResult? scanResult)
+    {
+        _lastSuccessfulScanResult = scanResult;
+        CompletionWarningText = string.Empty;
+
+        var outputFiles = scanResult?.OutputFiles
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .ToList() ?? [];
+
+        if (scanResult == null || scanResult.CapturedPageCount == 0 || outputFiles.Count == 0)
+        {
+            CompletionText = "No pages were captured. No PDF was created.";
+            CompletionToolTip = string.Empty;
+            CanOpenPdf = false;
+            CanOpenOutputFolder = false;
+            StatusText = CompletionText;
+            return;
+        }
+
+        if (outputFiles.Count == 1)
+        {
+            var outputPath = outputFiles[0];
+            CompletionText = $"{Path.GetFileName(outputPath)} was created.";
+            CompletionToolTip = outputPath;
+            CanOpenPdf = true;
+            CanOpenOutputFolder = true;
+            StatusText = CompletionText;
+            return;
+        }
+
+        CompletionText = $"{outputFiles.Count} PDF files were created.";
+        CompletionToolTip = string.Join(Environment.NewLine, outputFiles);
+        CanOpenPdf = false;
+        CanOpenOutputFolder = true;
+        StatusText = CompletionText;
+    }
+
+    private void TryOpenPdf(string pdfFilePath)
+    {
+        try
+        {
+            _pdfService.OpenPdfFile(pdfFilePath, OutputFolder);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MainWindowViewModel] OpenPdf failed. Path: '{pdfFilePath}', OutputFolder: '{OutputFolder}'. Exception: {ex}");
+            Console.Error.WriteLine($"[MainWindowViewModel] OpenPdf failed. Path: '{pdfFilePath}', OutputFolder: '{OutputFolder}'. Exception: {ex.Message}");
+            CompletionWarningText = "Warning: Could not open the created PDF.";
+        }
+    }
+
+    private void TryOpenOutputFolder(string outputFolderPath)
+    {
+        try
+        {
+            _pdfService.OpenOutputFolder(outputFolderPath, OutputFolder);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MainWindowViewModel] OpenOutputFolder failed. Path: '{outputFolderPath}', OutputFolder: '{OutputFolder}'. Exception: {ex}");
+            Console.Error.WriteLine($"[MainWindowViewModel] OpenOutputFolder failed. Path: '{outputFolderPath}', OutputFolder: '{OutputFolder}'. Exception: {ex.Message}");
+            CompletionWarningText = "Warning: Could not open the output folder.";
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanScan))]
     private async Task ScanAsync()
     {
@@ -241,6 +318,12 @@ public partial class MainWindowViewModel : ObservableValidator
         IsScanning = true;
         IsCancelRequested = false;
         PageCount = 0;
+        CompletionText = string.Empty;
+        CompletionToolTip = string.Empty;
+        CompletionWarningText = string.Empty;
+        CanOpenPdf = false;
+        CanOpenOutputFolder = false;
+        _lastSuccessfulScanResult = null;
         StatusText = "Connecting to scanner...";
 
         var scanCts = new CancellationTokenSource();
@@ -275,7 +358,7 @@ public partial class MainWindowViewModel : ObservableValidator
             }
 
             var scanResult = await _scanner.ScanDocuments(configuration, scanCts.Token, promptForMorePages: promptForMorePages);
-            StatusText = "Scanning completed.";
+            UpdateCompletionState(scanResult);
 
             if (configuration.DocumentOptions == DocumentOptions.Combined
                 && scanResult.OutputFiles.Count == 1)
@@ -284,7 +367,7 @@ public partial class MainWindowViewModel : ObservableValidator
                 if (!string.IsNullOrWhiteSpace(outputPath)
                     && _pdfService.PdfFileExists(outputPath))
                 {
-                    _pdfService.OpenPdfFile(outputPath, configuration.OutputFolder);
+                    TryOpenPdf(outputPath);
                 }
             }
         }
@@ -345,6 +428,32 @@ public partial class MainWindowViewModel : ObservableValidator
         StatusText = "Canceling scan...";
         _scanCancellationSource.Cancel();
         return Task.CompletedTask;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanOpenPdf))]
+    private void OpenPdf()
+    {
+        var outputPath = _lastSuccessfulScanResult?.OutputFiles
+            .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path));
+
+        if (string.IsNullOrWhiteSpace(outputPath))
+            return;
+
+        TryOpenPdf(outputPath);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanOpenOutputFolder))]
+    private void OpenOutputFolder()
+    {
+        var outputFiles = _lastSuccessfulScanResult?.OutputFiles
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .ToList() ?? [];
+
+        if (outputFiles.Count == 0)
+            return;
+
+        var outputFolderPath = Path.GetDirectoryName(outputFiles[0]) ?? OutputFolder;
+        TryOpenOutputFolder(outputFolderPath);
     }
 
     [RelayCommand]

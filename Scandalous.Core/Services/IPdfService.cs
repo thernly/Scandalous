@@ -6,6 +6,7 @@ namespace Scandalous.Core.Services
     {
         string GetPdfFilePath(ScanConfiguration configuration);
         void OpenPdfFile(string pdfFilePath, string expectedOutputFolder);
+        void OpenOutputFolder(string outputFolderPath, string expectedOutputFolder);
         bool PdfFileExists(string pdfFilePath);
     }
 } 

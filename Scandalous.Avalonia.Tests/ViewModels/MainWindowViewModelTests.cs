@@ -381,22 +381,25 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public async Task ScanCommand_WhenPdfViewerFails_ShowsErrorReturnsToIdleAndUnsubscribes()
+    public async Task ScanCommand_WhenPdfViewerFails_ShowsWarningReturnsToIdleAndUnsubscribes()
     {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var outputPath = Path.Combine(outputDir, "output.pdf");
         var scanner = new EventTrackingScanner
         {
             ScanResult = new ScanResult
             {
                 CapturedPageCount = 1,
-                OutputFiles = ["output.pdf"]
+                OutputFiles = [outputPath]
             }
         };
         var pdfService = Substitute.For<IPdfService>();
-        pdfService.PdfFileExists("output.pdf").Returns(true);
-        pdfService.When(service => service.OpenPdfFile("output.pdf", Arg.Any<string>()))
+        pdfService.PdfFileExists(outputPath).Returns(true);
+        pdfService.When(service => service.OpenPdfFile(outputPath, Arg.Any<string>()))
             .Do(_ => throw new InvalidOperationException());
         var viewModel = CreateViewModel(scanner, pdfService: pdfService);
-        var (outputDir, tessdataDir) = SetValidState(viewModel);
+        var (_, tessdataDir) = SetValidState(viewModel);
+        viewModel.OutputFolder = outputDir;
         string? errorMessage = null;
 
         try
@@ -410,7 +413,9 @@ public class MainWindowViewModelTests
             await viewModel.ScanCommand.ExecuteAsync(null);
 
             Assert.False(viewModel.IsScanning);
-            Assert.NotNull(errorMessage);
+            Assert.Null(errorMessage);
+            Assert.Equal("output.pdf was created.", viewModel.CompletionText);
+            Assert.Equal("Warning: Could not open the created PDF.", viewModel.CompletionWarningText);
             Assert.Equal(0, scanner.SubscriberCount);
             Assert.Equal(1, scanner.UnsubscribeCount);
         }
@@ -655,6 +660,192 @@ public class MainWindowViewModelTests
 
             pdfService.DidNotReceive().OpenPdfFile(Arg.Any<string>(), Arg.Any<string>());
             Assert.False(viewModel.IsScanning);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenZeroPagesAreReturned_UsesNoPagesCompletionMessage()
+    {
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 0,
+                OutputFiles = []
+            }
+        };
+        var pdfService = Substitute.For<IPdfService>();
+        var viewModel = CreateViewModel(scanner, pdfService: pdfService);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            Assert.Equal("No pages were captured. No PDF was created.", viewModel.CompletionText);
+            Assert.Equal(string.Empty, viewModel.CompletionToolTip);
+            Assert.False(viewModel.CanOpenPdf);
+            Assert.False(viewModel.CanOpenOutputFolder);
+            Assert.Equal("No pages were captured. No PDF was created.", viewModel.StatusText);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenSingleOutputIsReturned_UsesCreatedMessageAndAutoOpensPdf()
+    {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var outputPath = Path.Combine(outputDir, "report.pdf");
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 1,
+                OutputFiles = [outputPath]
+            }
+        };
+        var pdfService = Substitute.For<IPdfService>();
+        pdfService.PdfFileExists(outputPath).Returns(true);
+
+        var viewModel = CreateViewModel(scanner, pdfService: pdfService);
+        var (_, tessdataDir) = SetValidState(viewModel);
+        viewModel.OutputFolder = outputDir;
+
+        try
+        {
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            Assert.Equal("report.pdf was created.", viewModel.CompletionText);
+            Assert.Equal(outputPath, viewModel.CompletionToolTip);
+            Assert.True(viewModel.CanOpenPdf);
+            Assert.True(viewModel.CanOpenOutputFolder);
+            Assert.Equal("report.pdf was created.", viewModel.StatusText);
+            pdfService.Received(1).OpenPdfFile(outputPath, outputDir);
+
+            viewModel.OpenPdfCommand.Execute(null);
+            pdfService.Received(2).OpenPdfFile(outputPath, outputDir);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenMultipleOutputsAreReturned_UsesCountMessageAndFolderAction()
+    {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var firstOutputPath = Path.Combine(outputDir, "page-1.pdf");
+        var secondOutputPath = Path.Combine(outputDir, "page-2.pdf");
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 2,
+                OutputFiles = [firstOutputPath, secondOutputPath]
+            }
+        };
+        var pdfService = Substitute.For<IPdfService>();
+        var viewModel = CreateViewModel(scanner, pdfService: pdfService);
+        var (_, tessdataDir) = SetValidState(viewModel);
+        viewModel.OutputFolder = outputDir;
+
+        try
+        {
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            Assert.Equal("2 PDF files were created.", viewModel.CompletionText);
+            Assert.Equal($"{firstOutputPath}{Environment.NewLine}{secondOutputPath}", viewModel.CompletionToolTip);
+            Assert.False(viewModel.CanOpenPdf);
+            Assert.True(viewModel.CanOpenOutputFolder);
+            pdfService.DidNotReceive().OpenPdfFile(Arg.Any<string>(), Arg.Any<string>());
+
+            viewModel.OpenOutputFolderCommand.Execute(null);
+            pdfService.Received(1).OpenOutputFolder(outputDir, outputDir);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task ScanCommand_WhenPdfLaunchFails_ShowsWarningAndPreservesSuccessState()
+    {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var outputPath = Path.Combine(outputDir, "report.pdf");
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 1,
+                OutputFiles = [outputPath]
+            }
+        };
+        var pdfService = Substitute.For<IPdfService>();
+        pdfService.PdfFileExists(outputPath).Returns(true);
+        pdfService.When(service => service.OpenPdfFile(outputPath, outputDir)).Do(_ => throw new InvalidOperationException("boom"));
+
+        var viewModel = CreateViewModel(scanner, pdfService: pdfService);
+        var (_, tessdataDir) = SetValidState(viewModel);
+        viewModel.OutputFolder = outputDir;
+
+        try
+        {
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            Assert.Equal("report.pdf was created.", viewModel.CompletionText);
+            Assert.Equal("Warning: Could not open the created PDF.", viewModel.CompletionWarningText);
+            Assert.True(viewModel.CanOpenPdf);
+            Assert.Equal("report.pdf was created.", viewModel.StatusText);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task OpenOutputFolderCommand_WhenLaunchFails_ShowsWarningAndPreservesSuccessState()
+    {
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var firstOutputPath = Path.Combine(outputDir, "page-1.pdf");
+        var secondOutputPath = Path.Combine(outputDir, "page-2.pdf");
+        var scanner = new EventTrackingScanner
+        {
+            ScanResult = new ScanResult
+            {
+                CapturedPageCount = 2,
+                OutputFiles = [firstOutputPath, secondOutputPath]
+            }
+        };
+
+        var pdfService = Substitute.For<IPdfService>();
+        pdfService.When(service => service.OpenOutputFolder(outputDir, outputDir)).Do(_ => throw new InvalidOperationException("boom"));
+
+        var viewModel = CreateViewModel(scanner, pdfService: pdfService);
+        var (_, tessdataDir) = SetValidState(viewModel);
+        viewModel.OutputFolder = outputDir;
+
+        try
+        {
+            await viewModel.ScanCommand.ExecuteAsync(null);
+
+            Assert.Equal("2 PDF files were created.", viewModel.CompletionText);
+            Assert.True(viewModel.CanOpenOutputFolder);
+
+            viewModel.OpenOutputFolderCommand.Execute(null);
+
+            Assert.Equal("2 PDF files were created.", viewModel.CompletionText);
+            Assert.Equal("Warning: Could not open the output folder.", viewModel.CompletionWarningText);
+            Assert.Equal("2 PDF files were created.", viewModel.StatusText);
         }
         finally
         {
