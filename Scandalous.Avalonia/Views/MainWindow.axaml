@@ -33,7 +33,7 @@
 
                     <!-- Output section -->
                     <TextBlock Text="Output" FontWeight="SemiBold" FontSize="12" />
-                    <Grid ColumnDefinitions="*,Auto">
+                    <Grid ColumnDefinitions="*,Auto" IsEnabled="{Binding AreScanSettingsEnabled}">
                         <TextBlock Grid.Column="0" Text="{Binding OutputFolder}" TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center" Opacity="0.7" FontSize="12" Margin="0,0,6,0" />
                         <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseOutputFolderCommand}"
@@ -42,18 +42,21 @@
                     <TextBlock Text="{Binding OutputFolderError}"
                                Foreground="Red" FontSize="11"
                                IsVisible="{Binding OutputFolderError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
-                    <TextBox Text="{Binding BaseFilename}" MaxLength="200" PlaceholderText="Base filename" Padding="6,4" />
+                    <TextBox Text="{Binding BaseFilename}" MaxLength="200" PlaceholderText="Base filename" Padding="6,4"
+                             IsEnabled="{Binding AreScanSettingsEnabled}" />
 
                     <Separator Margin="0,2" />
 
                     <!-- Scanner section -->
                     <TextBlock Text="Scanner" FontWeight="SemiBold" FontSize="12" />
-                    <Grid ColumnDefinitions="*,Auto">
+                                        <Grid ColumnDefinitions="*,Auto">
                         <ComboBox Grid.Column="0" ItemsSource="{Binding Scanners}"
                                   SelectedItem="{Binding SelectedScanner}"
-                                  HorizontalAlignment="Stretch" Margin="0,0,6,0" />
+                                                                    HorizontalAlignment="Stretch" Margin="0,0,6,0"
+                                                                    IsEnabled="{Binding AreScanSettingsEnabled}" />
                         <Button Grid.Column="1" Content="Refresh" Command="{Binding GetScannersCommand}"
-                                Padding="8,4" FontSize="12" />
+                                                                Padding="8,4" FontSize="12"
+                                                                IsEnabled="{Binding AreScanSettingsEnabled}" />
                     </Grid>
                     <TextBlock Text="{Binding SelectedScannerError}"
                                Foreground="Red" FontSize="11"
@@ -64,7 +67,8 @@
                     <!-- Scan Options — inline, no Expander -->
                     <TextBlock Text="Scan Options" FontWeight="SemiBold" FontSize="12" />
 
-                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,2,0,0">
+                      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,2,0,0"
+                          IsEnabled="{Binding AreScanSettingsEnabled}">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Color Mode" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
                         <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ColorModeOptions}"
                                   SelectedItem="{Binding ColorMode}" HorizontalAlignment="Stretch" Margin="0,2">
@@ -100,7 +104,8 @@
                                   SelectedItem="{Binding SelectedDpi}" HorizontalAlignment="Stretch" Margin="0,2" />
                     </Grid>
 
-                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4,0,0"
+                                IsEnabled="{Binding AreScanSettingsEnabled}">
                         <CheckBox Content="Auto Deskew" IsChecked="{Binding AutoDeskew}" />
                         <CheckBox Content="Exclude Blank Pages" IsChecked="{Binding ExcludeBlankPages}" />
                     </StackPanel>
@@ -108,7 +113,8 @@
                     <Separator Margin="0,2" />
 
                     <!-- OCR Settings -->
-                    <Expander Header="OCR Settings" IsExpanded="{Binding IsOcrSettingsExpanded}" Padding="0">
+                    <Expander Header="OCR Settings" IsExpanded="{Binding IsOcrSettingsExpanded}" Padding="0"
+                              IsEnabled="{Binding AreScanSettingsEnabled}">
                         <StackPanel Spacing="6" Margin="0,6,0,0">
                             <CheckBox Content="Enable OCR" IsChecked="{Binding OcrEnabled}" />
                             <TextBlock Text="Tessdata folder" FontSize="12" IsEnabled="{Binding OcrEnabled}" />

@@ -153,6 +153,7 @@ public partial class MainWindowViewModel : ObservableValidator
     public string TessdataFolderError => GetFirstErrorMessage(nameof(TessdataFolder));
     public string SelectedLanguageCodeError => GetFirstErrorMessage(nameof(SelectedLanguageCode));
     public string NoOcrLanguagesText => AvailableLanguageCodes.Count == 0 ? "No OCR languages found" : string.Empty;
+    public bool AreScanSettingsEnabled => !IsScanning;
 
     public MainWindowViewModel(
         IDocumentScanner scanner,
@@ -187,7 +188,11 @@ public partial class MainWindowViewModel : ObservableValidator
         ValidateAllProperties();
     }
 
-    partial void OnIsScanningChanged(bool value) => ScanCommand.NotifyCanExecuteChanged();
+    partial void OnIsScanningChanged(bool value)
+    {
+        ScanCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(AreScanSettingsEnabled));
+    }
 
     partial void OnOutputFolderChanged(string value) => ValidateProperty(value, nameof(OutputFolder));
     partial void OnBaseFilenameChanged(string value) => ValidateProperty(value, nameof(BaseFilename));
@@ -241,7 +246,9 @@ public partial class MainWindowViewModel : ObservableValidator
             pageHandlerSubscribed = true;
 
             Func<Task<bool>>? promptForMorePages = null;
-            if (PaperSource == ScannerPaperSource.Flatbed && DocumentOption == DocumentOptions.Combined && ShowYesNoDialogAsync != null)
+            if (configuration.ScannerPaperSource == ScannerPaperSource.Flatbed
+                && configuration.DocumentOptions == DocumentOptions.Combined
+                && ShowYesNoDialogAsync != null)
             {
                 promptForMorePages = () => Dispatcher.UIThread.InvokeAsync(() =>
                     ShowYesNoDialogAsync("More Pages?", "Place the next page on the flatbed and click Yes, or click No to finish."));
@@ -250,7 +257,9 @@ public partial class MainWindowViewModel : ObservableValidator
             var outputPath = await _scanner.ScanDocuments(configuration, promptForMorePages: promptForMorePages);
             StatusText = "Scanning completed.";
 
-            if (DocumentOption == DocumentOptions.Combined && !string.IsNullOrEmpty(outputPath) && _pdfService.PdfFileExists(outputPath))
+            if (configuration.DocumentOptions == DocumentOptions.Combined
+                && !string.IsNullOrEmpty(outputPath)
+                && _pdfService.PdfFileExists(outputPath))
                 _pdfService.OpenPdfFile(outputPath, configuration.OutputFolder);
         }
         catch (Exception ex)

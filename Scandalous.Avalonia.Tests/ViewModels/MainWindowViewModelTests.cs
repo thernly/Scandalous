@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using NSubstitute;
 using Scandalous.Avalonia.ViewModels;
+using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
 using Scandalous.Core.Services;
 
@@ -48,6 +49,29 @@ public class MainWindowViewModelTests
         {
             Cleanup(outputDir, tessdataDir);
         }
+    }
+
+    [Fact]
+    public void AreScanSettingsEnabled_FollowsIsScanningAndRaisesPropertyChanged()
+    {
+        var viewModel = CreateViewModel();
+        var changedProperties = new List<string>();
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.PropertyName))
+                changedProperties.Add(e.PropertyName);
+        };
+
+        Assert.True(viewModel.AreScanSettingsEnabled);
+
+        viewModel.IsScanning = true;
+
+        Assert.False(viewModel.AreScanSettingsEnabled);
+        Assert.Contains(nameof(MainWindowViewModel.AreScanSettingsEnabled), changedProperties);
+
+        viewModel.IsScanning = false;
+
+        Assert.True(viewModel.AreScanSettingsEnabled);
     }
 
     [Fact]
@@ -250,6 +274,7 @@ public class MainWindowViewModelTests
             TessdataFolder = tessdataDir,
             TessdataLanguageCode = string.Empty
         });
+        configManager.GetInstalledTessdataLanguageCodes(tessdataDir).Returns(new List<string> { "deu", "eng" });
 
         var mapper = Substitute.For<IScanConfigurationMapper>();
         mapper.BuildUIStateFromConfiguration(Arg.Any<ScanConfiguration>()).Returns(new UIState
@@ -388,6 +413,57 @@ public class MainWindowViewModelTests
         }
     }
 
+    [Fact]
+    public async Task ScanCommand_UsesCapturedConfigurationForCompletionDecisions()
+    {
+        var scanner = new DeferredScanner();
+        var mapper = Substitute.For<IScanConfigurationMapper>();
+        var pdfService = Substitute.For<IPdfService>();
+        var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
+        var tessdataDir = Directory.CreateTempSubdirectory("scandalous-tessdata-").FullName;
+        File.WriteAllBytes(Path.Combine(tessdataDir, "eng.traineddata"), [1]);
+
+        mapper.BuildConfigurationFromUIState(Arg.Any<UIState>()).Returns(callInfo =>
+        {
+            var uiState = callInfo.Arg<UIState>();
+            return new ScanConfiguration
+            {
+                OutputFolder = uiState.OutputFolder,
+                DocumentOptions = uiState.DocumentCombined ? DocumentOptions.Combined : DocumentOptions.Individual,
+                ScannerPaperSource = uiState.Flatbed ? ScannerPaperSource.Flatbed : ScannerPaperSource.FeederDuplex
+            };
+        });
+
+        var viewModel = CreateViewModel(scanner, mapper, pdfService);
+        var outputPath = Path.Combine(outputDir, "output.pdf");
+        pdfService.PdfFileExists(outputPath).Returns(true);
+
+        try
+        {
+            viewModel.OutputFolder = outputDir;
+            viewModel.SelectedScanner = "Office scanner";
+            viewModel.OcrEnabled = true;
+            viewModel.TessdataFolder = tessdataDir;
+            viewModel.SelectedLanguageCode = "eng";
+            viewModel.DocumentOption = DocumentOptions.Combined;
+
+            var scanTask = viewModel.ScanCommand.ExecuteAsync(null);
+            await WaitUntilAsync(() => viewModel.IsScanning);
+
+            // Simulate a user edit during scanning.
+            viewModel.DocumentOption = DocumentOptions.Individual;
+            scanner.Complete(outputPath);
+
+            await scanTask;
+
+            pdfService.Received(1).OpenPdfFile(outputPath, outputDir);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
     private static (string OutputDir, string TessdataDir) SetValidState(MainWindowViewModel viewModel)
     {
         var outputDir = Directory.CreateTempSubdirectory("scandalous-output-").FullName;
@@ -469,5 +545,38 @@ public class MainWindowViewModelTests
         public Task<List<NAPS2.Scan.ScanDevice>> GetScanDevicesAsync() => Task.FromResult(new List<NAPS2.Scan.ScanDevice>());
 
         public void Dispose() { }
+    }
+
+    private sealed class DeferredScanner : IDocumentScanner
+    {
+        private readonly TaskCompletionSource<string> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public event EventHandler<PageScannedEventArgs>? PageScanned
+        {
+            add { }
+            remove { }
+        }
+
+        public Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null) =>
+            _tcs.Task;
+
+        public Task<List<NAPS2.Scan.ScanDevice>> GetScanDevicesAsync() => Task.FromResult(new List<NAPS2.Scan.ScanDevice>());
+
+        public void Complete(string outputPath) => _tcs.TrySetResult(outputPath);
+
+        public void Dispose() { }
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        for (var attempt = 0; attempt < 50; attempt++)
+        {
+            if (condition())
+                return;
+
+            await Task.Yield();
+        }
+
+        throw new TimeoutException("Condition was not met in time.");
     }
 }
