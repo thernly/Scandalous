@@ -507,6 +507,43 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task CancelScanAndWaitAsync_WhenScanIsActive_CancelsAndWaitsForCompletion()
+    {
+        var scanner = new CancelAwareScanner();
+        var viewModel = CreateViewModel(scanner);
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
+
+        try
+        {
+            var scanTask = viewModel.ScanCommand.ExecuteAsync(null);
+            await WaitUntilAsync(() => viewModel.IsScanning);
+
+            await viewModel.CancelScanAndWaitAsync();
+            await scanTask;
+
+            Assert.False(viewModel.IsScanning);
+            Assert.Equal("Scan canceled.", viewModel.StatusText);
+            Assert.Equal(1, scanner.CancelRequestCount);
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
+    }
+
+    [Fact]
+    public async Task CancelScanAndWaitAsync_WhenScanIsNotActive_DoesNothing()
+    {
+        var scanner = new CancelAwareScanner();
+        var viewModel = CreateViewModel(scanner);
+
+        await viewModel.CancelScanAndWaitAsync();
+
+        Assert.False(viewModel.IsScanning);
+        Assert.Equal(0, scanner.CancelRequestCount);
+    }
+
+    [Fact]
     public async Task ScanCommand_UsesCapturedConfigurationForCompletionDecisions()
     {
         var scanner = new DeferredScanner();

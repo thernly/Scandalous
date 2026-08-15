@@ -2,11 +2,15 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Scandalous.Avalonia.ViewModels;
 using Scandalous.Core.Models;
+using System.Diagnostics;
 
 namespace Scandalous.Avalonia.Views;
 
 public partial class MainWindow : Window
 {
+    private bool _isCloseWorkflowRunning;
+    private bool _isReissuingClose;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -70,23 +74,62 @@ public partial class MainWindow : Window
 
     private async void OnClosing(object? sender, global::Avalonia.Controls.WindowClosingEventArgs e)
     {
-        if (DataContext is not MainWindowViewModel vm) return;
-
-        await vm.SaveConfigurationAsync();
-
-        var windowState = new WindowStateInfo
+        if (_isReissuingClose)
         {
-            Width = Width,
-            Height = Height,
-            Left = Position.X,
-            Top = Position.Y,
-            State = WindowState switch
+            _isReissuingClose = false;
+            return;
+        }
+
+        if (_isCloseWorkflowRunning)
+        {
+            e.Cancel = true;
+            return;
+        }
+
+        e.Cancel = true;
+        _isCloseWorkflowRunning = true;
+
+        try
+        {
+            if (DataContext is MainWindowViewModel vm)
             {
-                global::Avalonia.Controls.WindowState.Maximized => Core.Models.WindowState.Maximized,
-                global::Avalonia.Controls.WindowState.Minimized => Core.Models.WindowState.Minimized,
-                _ => Core.Models.WindowState.Normal
+                if (vm.IsScanning)
+                    await vm.CancelScanAndWaitAsync();
+
+                try
+                {
+                    await vm.SaveConfigurationAsync();
+                    await vm.SaveWindowStateAsync(CreateWindowStateInfo());
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to persist state on close: {ex}");
+                }
             }
-        };
-        await vm.SaveWindowStateAsync(windowState);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Close workflow failed: {ex}");
+        }
+        finally
+        {
+            _isCloseWorkflowRunning = false;
+            _isReissuingClose = true;
+            Close();
+        }
     }
+
+    private WindowStateInfo CreateWindowStateInfo() => new()
+    {
+        Width = Width,
+        Height = Height,
+        Left = Position.X,
+        Top = Position.Y,
+        State = WindowState switch
+        {
+            global::Avalonia.Controls.WindowState.Maximized => Core.Models.WindowState.Maximized,
+            global::Avalonia.Controls.WindowState.Minimized => Core.Models.WindowState.Minimized,
+            _ => Core.Models.WindowState.Normal
+        }
+    };
 }

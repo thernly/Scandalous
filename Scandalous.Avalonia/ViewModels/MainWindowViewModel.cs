@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -64,6 +65,7 @@ public partial class MainWindowViewModel : ObservableValidator
     [ObservableProperty] private string? previewImagePath = null;
     [ObservableProperty] private int pageCount = 0;
     private CancellationTokenSource? _scanCancellationSource;
+    private TaskCompletionSource<object?>? _activeScanCompletion;
 
     public bool CanCancelScan => IsScanning && !IsCancelRequested;
 
@@ -234,6 +236,8 @@ public partial class MainWindowViewModel : ObservableValidator
     [RelayCommand(CanExecute = nameof(CanScan))]
     private async Task ScanAsync()
     {
+        var scanCompletion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _activeScanCompletion = scanCompletion;
         IsScanning = true;
         IsCancelRequested = false;
         PageCount = 0;
@@ -301,12 +305,28 @@ public partial class MainWindowViewModel : ObservableValidator
             }
             finally
             {
+                scanCompletion.TrySetResult(null);
+                if (ReferenceEquals(_activeScanCompletion, scanCompletion))
+                    _activeScanCompletion = null;
+
                 _scanCancellationSource?.Dispose();
                 _scanCancellationSource = null;
                 IsCancelRequested = false;
                 IsScanning = false;
             }
         }
+    }
+
+    public async Task CancelScanAndWaitAsync()
+    {
+        if (!IsScanning)
+            return;
+
+        await CancelAsync();
+
+        var activeScanTask = _activeScanCompletion?.Task;
+        if (activeScanTask != null)
+            await activeScanTask;
     }
 
     [RelayCommand(CanExecute = nameof(CanCancelScan))]
