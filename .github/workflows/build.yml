@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Supersede superseded PR runs, but let main-branch and manual runs finish so
+# every commit on main keeps a completed build.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            runtime: osx-arm64
+          - name: Windows
+            os: windows-latest
+            runtime: win-x64
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore Scandalous.sln
+
+      - name: Test
+        run: dotnet test Scandalous.sln --configuration Release --no-restore
+
+      - name: Publish ${{ matrix.runtime }}
+        run: >-
+          dotnet publish Scandalous.Avalonia/Scandalous.Avalonia.csproj
+          --configuration Release
+          --runtime ${{ matrix.runtime }}
+          --self-contained true
+          --output publish/${{ matrix.runtime }}

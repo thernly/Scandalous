@@ -1,0 +1,191 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Test (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+          - name: Windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore Scandalous.sln
+
+      - name: Test
+        run: dotnet test Scandalous.sln --configuration Release --no-restore
+
+  mac:
+    name: macOS (${{ matrix.runtime }})
+    needs: test
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime:
+          - osx-arm64
+          - osx-x64
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          version="$(dotnet msbuild Scandalous.Avalonia/Scandalous.Avalonia.csproj -getProperty:Version -nologo | tr -d '\r' | tail -n 1)"
+          if [ -z "$version" ]; then
+            echo "Could not resolve the Version property" >&2
+            exit 1
+          fi
+          echo "value=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate release tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          if [ "${GITHUB_REF_NAME}" != "v${VERSION}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match project version v${VERSION}" >&2
+            exit 1
+          fi
+
+      - name: Build application bundle
+        shell: bash
+        run: ./publish-mac.sh ${{ matrix.runtime }}
+
+      - name: Create zip archive
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent publish/Scandalous.app "Scandalous-${VERSION}-${{ matrix.runtime }}.zip"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Scandalous-${{ matrix.runtime }}
+          path: Scandalous-*-${{ matrix.runtime }}.zip
+          if-no-files-found: error
+
+  windows:
+    name: Windows (win-x64)
+    needs: test
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = (dotnet msbuild Scandalous.Avalonia/Scandalous.Avalonia.csproj -getProperty:Version -nologo |
+            Select-Object -Last 1).Trim()
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "Could not resolve the Version property"
+          }
+          "value=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Validate release tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          if ($env:GITHUB_REF_NAME -ne "v$env:VERSION") {
+            throw "Tag $env:GITHUB_REF_NAME does not match project version v$env:VERSION"
+          }
+
+      - name: Publish application
+        shell: pwsh
+        run: |
+          dotnet publish Scandalous.Avalonia/Scandalous.Avalonia.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            --output publish/Scandalous
+
+      - name: Create zip archive
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          # -Path names the directory itself (no trailing wildcard) so the archive
+          # has a single Scandalous/ root instead of spraying loose files.
+          Compress-Archive -Path publish/Scandalous `
+            -DestinationPath "Scandalous-$env:VERSION-win-x64.zip"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Scandalous-win-x64
+          path: Scandalous-*-win-x64.zip
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - mac
+      - windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" artifacts/* --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$GITHUB_REF_NAME" artifacts/* --verify-tag --generate-notes --repo "$GITHUB_REPOSITORY"
+          fi

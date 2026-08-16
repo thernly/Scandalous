@@ -8,10 +8,12 @@
   <string>Scandalous</string>
   <key>CFBundleDisplayName</key>
   <string>Scandalous</string>
+  <!-- Placeholders. publish-mac.sh overwrites both with the MSBuild Version
+       property (Directory.Build.props) when it assembles the .app bundle. -->
   <key>CFBundleVersion</key>
-  <string>1.0.0</string>
+  <string>0.0.0</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0.0</string>
+  <string>0.0.0</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleSignature</key>

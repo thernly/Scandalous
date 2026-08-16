@@ -109,6 +109,26 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// Moves the window on a title-bar drag, and toggles maximize on a double click,
+    /// replacing the system behaviour lost to the extended client area.
+    /// </summary>
+    private void OnTitleBarPointerPressed(object? sender, global::Avalonia.Input.PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == global::Avalonia.Controls.WindowState.Maximized
+                ? global::Avalonia.Controls.WindowState.Normal
+                : global::Avalonia.Controls.WindowState.Maximized;
+            return;
+        }
+
+        BeginMoveDrag(e);
+    }
+
     private void ApplyWindowState(WindowStateInfo saved)
     {
         // Width/Height are logical pixels while Position and screen working areas are physical,

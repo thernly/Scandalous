@@ -269,5 +269,16 @@
                    Margin="24" />
         </Panel>
 
+        <!-- Drag strip. ExtendClientAreaToDecorationsHint hands the whole
+             window over to client content, which removes the system drag
+             region, so the title-bar band has to move the window itself.
+             Declared last so it sits above the panels it overlays; it is
+             transparent and covers only inert content (wordmark, preview
+             margin). -->
+        <Border Grid.Column="0" Grid.ColumnSpan="3"
+                VerticalAlignment="Top" Height="52"
+                Background="Transparent"
+                PointerPressed="OnTitleBarPointerPressed" />
+
     </Grid>
 </Window>
