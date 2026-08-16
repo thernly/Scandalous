@@ -21,6 +21,7 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 cp -r "$PUBLISH_DIR/"* "$APP_BUNDLE/Contents/MacOS/"
 cp "Scandalous.Avalonia/Info.plist" "$APP_BUNDLE/Contents/"
+cp "Scandalous.Avalonia/Assets/Scandalous.icns" "$APP_BUNDLE/Contents/Resources/"
 chmod +x "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 
 rm -rf "$PUBLISH_DIR"

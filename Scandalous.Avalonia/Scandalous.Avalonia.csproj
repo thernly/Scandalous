@@ -8,7 +8,12 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>Scandalous</AssemblyName>
     <Version>1.0.0</Version>
+    <ApplicationIcon>Assets/Scandalous.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/AppIcon.png" />
+  </ItemGroup>
 
   <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx'))">
     <None Include="Info.plist" CopyToPublishDirectory="PreserveNewest" />
