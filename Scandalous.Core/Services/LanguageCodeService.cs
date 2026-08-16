@@ -25,20 +25,30 @@ namespace Scandalous.Core.Services
                 return false;
 
             var availableCodes = GetAvailableLanguageCodes(tessdataFolder);
-            return availableCodes.Contains(languageCode);
+            return availableCodes.Contains(languageCode, StringComparer.OrdinalIgnoreCase);
         }
 
         public string GetBestLanguageCode(string tessdataFolder, string userPreferredCode = "eng")
         {
             var availableCodes = GetAvailableLanguageCodes(tessdataFolder);
-            
+
             if (availableCodes.Count == 0)
-                return GetDefaultLanguageCode();
+                return string.Empty;
 
-            if (!string.IsNullOrEmpty(userPreferredCode) && availableCodes.Contains(userPreferredCode))
-                return userPreferredCode;
+            if (!string.IsNullOrWhiteSpace(userPreferredCode))
+            {
+                var preferredMatch = availableCodes.FirstOrDefault(code =>
+                    string.Equals(code, userPreferredCode, StringComparison.OrdinalIgnoreCase));
+                if (!string.IsNullOrWhiteSpace(preferredMatch))
+                    return preferredMatch;
+            }
 
-            return availableCodes[0]; // Fallback to first available code
+            var englishMatch = availableCodes.FirstOrDefault(code =>
+                string.Equals(code, GetDefaultLanguageCode(), StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrEmpty(englishMatch))
+                return englishMatch;
+
+            return availableCodes[0];
         }
     }
 } 

@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Scandalous.Core.Validation
 {
     public static class FileNameValidator
@@ -78,12 +80,15 @@ namespace Scandalous.Core.Validation
                 // Reserved names are checked against the part before the (final) extension.
             }
 
-            // Rule: Check for reserved names (case-insensitive).
+            // Rule: Check for reserved names (case-insensitive, Windows only).
             // Applies to the name part before the extension (e.g., "CON" in "CON.txt").
-            if (!string.IsNullOrEmpty(nameToCheckForReserved) &&
-                ReservedNamesInternal.Any(rn => rn.Equals(nameToCheckForReserved, StringComparison.OrdinalIgnoreCase)))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return (false, $"The name component '{nameToCheckForReserved}' (from '{name}') is a reserved system name.");
+                if (!string.IsNullOrEmpty(nameToCheckForReserved) &&
+                    ReservedNamesInternal.Any(rn => rn.Equals(nameToCheckForReserved, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return (false, $"The name component '{nameToCheckForReserved}' (from '{name}') is a reserved system name.");
+                }
             }
 
             // Rule: Length check.

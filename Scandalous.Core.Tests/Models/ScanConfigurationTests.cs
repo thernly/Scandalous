@@ -1,5 +1,6 @@
 using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Xunit;
 
@@ -19,6 +20,7 @@ namespace Scandalous.Core.Tests.Models
             Assert.True(config.ExcludeBlankPages);
             Assert.Equal(300, config.ScanResolutionDPI);
             Assert.Equal(ScannerPaperSource.Auto, config.ScannerPaperSource);
+            Assert.Equal(ScannerPaperSize.Letter, config.PaperSize);
             Assert.False(config.OcrEnabled);
             Assert.Equal(string.Empty, config.TessdataFolder);
             Assert.Equal("eng", config.TessdataLanguageCode);
@@ -38,7 +40,8 @@ namespace Scandalous.Core.Tests.Models
                 scannerPaperSource: ScannerPaperSource.FeederDuplex,
                 ocrEnabled: true,
                 tessdataFolder: "C:/tessdata",
-                languageCode: "deu"
+                languageCode: "deu",
+                paperSize: ScannerPaperSize.A4
             );
             Assert.Equal("C:/output", config.OutputFolder);
             Assert.Equal("doc", config.OutputBaseFileName);
@@ -48,6 +51,7 @@ namespace Scandalous.Core.Tests.Models
             Assert.False(config.ExcludeBlankPages);
             Assert.Equal(600, config.ScanResolutionDPI);
             Assert.Equal(ScannerPaperSource.FeederDuplex, config.ScannerPaperSource);
+            Assert.Equal(ScannerPaperSize.A4, config.PaperSize);
             Assert.True(config.OcrEnabled);
             Assert.Equal("C:/tessdata", config.TessdataFolder);
             Assert.Equal("deu", config.TessdataLanguageCode);
@@ -190,6 +194,23 @@ namespace Scandalous.Core.Tests.Models
             Assert.Equal(config.TessdataLanguageCode, deserializedConfig.TessdataLanguageCode);
         }
 
+                [Fact]
+                public void ScanConfiguration_MissingPaperSizeInJson_DefaultsToLetter()
+                {
+                        var json = """
+                        {
+                            "outputFolder": "C:/test/output",
+                            "outputBaseFileName": "test-document",
+                            "scanResolutionDPI": 300
+                        }
+                        """;
+
+                        var deserializedConfig = JsonSerializer.Deserialize<ScanConfiguration>(json);
+
+                        Assert.NotNull(deserializedConfig);
+                        Assert.Equal(ScannerPaperSize.Letter, deserializedConfig.PaperSize);
+                }
+
         #endregion
 
         #region Validation Integration Tests
@@ -197,6 +218,9 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithInvalidOutputFolder_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("'<' and '>' are valid path chars on non-Windows platforms");
+
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/invalid<folder>",
@@ -208,6 +232,8 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithInvalidBaseFileName_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '<' is a valid filename char on non-Windows platforms");
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/test",
@@ -233,6 +259,8 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithReservedFolderName_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/CON",
@@ -244,6 +272,8 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithReservedFileName_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/test",
@@ -299,6 +329,8 @@ namespace Scandalous.Core.Tests.Models
         [Fact]
         public void ScanConfiguration_WithInvalidTessdataFolder_ThrowsArgumentException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '<' is a valid path char on non-Windows platforms");
             // Arrange & Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => new ScanConfiguration(
                 outputFolder: "C:/test",

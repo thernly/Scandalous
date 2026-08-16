@@ -1,0 +1,273 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Scandalous.Avalonia.ViewModels"
+        xmlns:enums="using:Scandalous.Core.Enums"
+        xmlns:conv="using:Avalonia.Data.Converters"
+        xmlns:automation="using:Avalonia.Automation"
+        x:Class="Scandalous.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Scandalous"
+        Icon="avares://Scandalous/Assets/AppIcon.png"
+        Background="{DynamicResource SurfaceBase}"
+        Width="1200" Height="800"
+        MinWidth="800" MinHeight="600"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="340" MinWidth="300" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Controls panel -->
+        <DockPanel Grid.Column="0" Background="{DynamicResource SurfaceRail}">
+
+            <!-- Identity strip. The client area is extended under the system
+                 chrome so the rail colour reaches the top of the window; the
+                 left inset clears the macOS traffic lights. -->
+            <Border DockPanel.Dock="Top" Height="52" Padding="80,0,12,0">
+                <TextBlock Classes="wordmark" Text="SCANDALOUS" VerticalAlignment="Center" />
+            </Border>
+
+            <!-- Status section — pinned to bottom. Declared before the action
+                 row so DockPanel gives it the true bottom edge. -->
+            <StackPanel DockPanel.Dock="Bottom" Margin="12,10,12,12" Spacing="6">
+                <Border Height="1" Background="{DynamicResource BorderSubtle}" Margin="0,0,0,4" />
+                <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
+                <!-- Avalonia 12 exposes polite live-region announcement through
+                     AutomationProperties.LiveSetting; screen-reader support for it still
+                     varies by platform backend. -->
+                <TextBlock Text="{Binding StatusText}" FontSize="{DynamicResource FontSizeSmall}"
+                           TextWrapping="Wrap"
+                           Foreground="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}}"
+                           automation:AutomationProperties.Name="Scan status"
+                           automation:AutomationProperties.LiveSetting="Polite"
+                           ToolTip.Tip="{Binding CompletionToolTip}" />
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,0,0">
+                    <Button Classes="quiet" Content="Open PDF" Command="{Binding OpenPdfCommand}" IsVisible="{Binding CanOpenPdf}" />
+                    <Button Classes="quiet" Content="Open Output Folder" Command="{Binding OpenOutputFolderCommand}" IsVisible="{Binding CanOpenOutputFolder}" />
+                </StackPanel>
+                <TextBlock Classes="warn" Text="{Binding CompletionWarningText}"
+                           IsVisible="{Binding CompletionWarningText, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Text="{Binding PageCount, StringFormat='Pages scanned: {0}'}"
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <!-- Scan / cancel — docked, not scrolled. Inside the ScrollViewer
+                 the primary action could scroll out of reach on a short window. -->
+            <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="12,8,12,0">
+                <Button Grid.Column="0" Classes="scan" Content="SCAN" Command="{Binding ScanCommand}"
+                        HorizontalAlignment="Stretch" />
+                <Button Grid.Column="1" Classes="cancel" Content="CANCEL" Command="{Binding CancelCommand}"
+                        IsEnabled="{Binding CanCancelScan}"
+                        automation:AutomationProperties.Name="Cancel scan"
+                        MinWidth="110"
+                        Margin="8,0,0,0" />
+            </Grid>
+
+            <!-- Scrollable controls -->
+            <ScrollViewer>
+                <StackPanel Margin="12,12,12,4" Spacing="14">
+
+                    <!-- ── Output ─────────────────────────────────────── -->
+                    <StackPanel Spacing="0">
+                        <Border Classes="tab" Background="{StaticResource TabOutputBrush}">
+                            <TextBlock Classes="tabLabel" Text="OUTPUT"
+                                       Foreground="{StaticResource TabOutputText}" />
+                        </Border>
+                        <Border Classes="card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Name="OutputFolderLabel" Classes="fieldLabel" Text="Output folder" />
+                                <Grid ColumnDefinitions="*,Auto" IsEnabled="{Binding AreScanSettingsEnabled}">
+                                    <TextBlock Grid.Column="0" Classes="pathValue" Text="{Binding OutputFolder}"
+                                               Margin="0,0,6,0"
+                                               automation:AutomationProperties.LabeledBy="{Binding #OutputFolderLabel}"
+                                               ToolTip.Tip="{Binding OutputFolder}" />
+                                    <Button Grid.Column="1" Classes="quiet" Content="Browse…"
+                                            Command="{Binding BrowseOutputFolderCommand}"
+                                            automation:AutomationProperties.Name="Browse for output folder"
+                                            automation:AutomationProperties.HelpText="Choose the folder where scanned PDFs are saved." />
+                                </Grid>
+                                <TextBlock Classes="error" Text="{Binding OutputFolderError}"
+                                           IsVisible="{Binding OutputFolderError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                                <TextBlock Name="BaseFilenameLabel" Classes="fieldLabel" Text="Base filename" />
+                                <TextBox Text="{Binding BaseFilename}" MaxLength="200" Padding="6,4"
+                                         IsEnabled="{Binding AreScanSettingsEnabled}"
+                                         automation:AutomationProperties.LabeledBy="{Binding #BaseFilenameLabel}"
+                                         automation:AutomationProperties.HelpText="Name used for the created PDF files, without an extension." />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ── Scanner ────────────────────────────────────── -->
+                    <StackPanel Spacing="0">
+                        <Border Classes="tab" Background="{StaticResource TabScannerBrush}">
+                            <TextBlock Name="ScannerLabel" Classes="tabLabel" Text="SCANNER"
+                                       Foreground="{StaticResource TabScannerText}" />
+                        </Border>
+                        <Border Classes="card">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <ComboBox Grid.Column="0" ItemsSource="{Binding Scanners}"
+                                              SelectedItem="{Binding SelectedScanner}"
+                                              HorizontalAlignment="Stretch" Margin="0,0,6,0"
+                                              IsEnabled="{Binding AreScanSettingsEnabled}"
+                                              automation:AutomationProperties.LabeledBy="{Binding #ScannerLabel}" />
+                                    <Button Grid.Column="1" Classes="quiet" Content="Refresh"
+                                            Command="{Binding GetScannersCommand}"
+                                            IsEnabled="{Binding AreScanSettingsEnabled}"
+                                            automation:AutomationProperties.Name="Refresh scanner list" />
+                                </Grid>
+                                <!-- SelectedScanner is validated by ObservableValidator, so the
+                                     ComboBox already renders the message as a DataValidationErrors
+                                     adornment. An explicit TextBlock here printed it twice. -->
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ── Scan options ───────────────────────────────── -->
+                    <StackPanel Spacing="0">
+                        <Border Classes="tab" Background="{StaticResource TabOptionsBrush}">
+                            <TextBlock Classes="tabLabel" Text="SCAN OPTIONS"
+                                       Foreground="{StaticResource TabOptionsText}" />
+                        </Border>
+                        <Border Classes="card">
+                            <StackPanel Spacing="8">
+
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                                      IsEnabled="{Binding AreScanSettingsEnabled}">
+                                    <TextBlock Name="ColorModeLabel" Grid.Row="0" Grid.Column="0" Classes="fieldLabel" Text="Color Mode" Margin="0,0,10,0" />
+                                    <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ColorModeOptions}"
+                                              SelectedItem="{Binding ColorMode}" HorizontalAlignment="Stretch" Margin="0,2"
+                                              automation:AutomationProperties.LabeledBy="{Binding #ColorModeLabel}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:ScannerColorMode">
+                                                <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <TextBlock Name="PaperSourceLabel" Grid.Row="1" Grid.Column="0" Classes="fieldLabel" Text="Paper Source" Margin="0,0,10,0" />
+                                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding PaperSourceOptions}"
+                                              SelectedItem="{Binding PaperSource}" HorizontalAlignment="Stretch" Margin="0,2"
+                                              automation:AutomationProperties.LabeledBy="{Binding #PaperSourceLabel}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:ScannerPaperSource">
+                                                <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <TextBlock Name="PaperSizeLabel" Grid.Row="2" Grid.Column="0" Classes="fieldLabel" Text="Paper Size" Margin="0,0,10,0" />
+                                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding PaperSizeOptions}"
+                                              SelectedItem="{Binding PaperSize}" HorizontalAlignment="Stretch" Margin="0,2"
+                                              automation:AutomationProperties.LabeledBy="{Binding #PaperSizeLabel}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:ScannerPaperSize">
+                                                <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <TextBlock Name="DocumentOptionLabel" Grid.Row="3" Grid.Column="0" Classes="fieldLabel" Text="Document" Margin="0,0,10,0" />
+                                    <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding DocumentOptionOptions}"
+                                              SelectedItem="{Binding DocumentOption}" HorizontalAlignment="Stretch" Margin="0,2"
+                                              automation:AutomationProperties.LabeledBy="{Binding #DocumentOptionLabel}"
+                                              automation:AutomationProperties.HelpText="Create one combined PDF or a separate PDF per page.">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:DocumentOptions">
+                                                <TextBlock Text="{Binding Converter={StaticResource EnumDisplayConverter}}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <TextBlock Name="DpiLabel" Grid.Row="4" Grid.Column="0" Classes="fieldLabel" Text="DPI" Margin="0,0,10,0" />
+                                    <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding DpiOptions}"
+                                              SelectedItem="{Binding SelectedDpi}" HorizontalAlignment="Stretch" Margin="0,2"
+                                              automation:AutomationProperties.LabeledBy="{Binding #DpiLabel}"
+                                              automation:AutomationProperties.HelpText="Scan resolution in dots per inch." />
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,2,0,0"
+                                            IsEnabled="{Binding AreScanSettingsEnabled}">
+                                    <CheckBox Content="Auto Deskew" IsChecked="{Binding AutoDeskew}" />
+                                    <CheckBox Content="Exclude Blank Pages" IsChecked="{Binding ExcludeBlankPages}" />
+                                </StackPanel>
+
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}" Margin="0,2" />
+
+                                <!-- OCR stays nested rather than taking a fourth band: three
+                                     tab colours is the icon's motif, four would be a pattern. -->
+                                <Expander Header="OCR Settings" IsExpanded="{Binding IsOcrSettingsExpanded}" Padding="0"
+                                          IsEnabled="{Binding AreScanSettingsEnabled}">
+                                    <StackPanel Spacing="6" Margin="0,6,0,0">
+                                        <CheckBox Content="Enable OCR" IsChecked="{Binding OcrEnabled}" />
+                                        <TextBlock Name="TessdataFolderLabel" Classes="fieldLabel" Text="Tessdata folder" IsEnabled="{Binding OcrEnabled}" />
+                                        <Grid ColumnDefinitions="*,Auto" IsEnabled="{Binding OcrEnabled}">
+                                            <TextBlock Grid.Column="0" Classes="pathValue" Text="{Binding TessdataFolder}"
+                                                       Margin="0,0,6,0"
+                                                       automation:AutomationProperties.LabeledBy="{Binding #TessdataFolderLabel}"
+                                                       ToolTip.Tip="{Binding TessdataFolder}" />
+                                            <Button Grid.Column="1" Classes="quiet" Content="Browse…"
+                                                    Command="{Binding BrowseTessdataFolderCommand}"
+                                                    automation:AutomationProperties.Name="Browse for tessdata folder"
+                                                    automation:AutomationProperties.HelpText="Choose the folder containing Tesseract traineddata files." />
+                                        </Grid>
+                                        <TextBlock Classes="error" Text="{Binding TessdataFolderError}"
+                                                   IsVisible="{Binding TessdataFolderError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                                        <TextBlock Name="OcrLanguageLabel" Classes="fieldLabel" Text="OCR language" IsEnabled="{Binding OcrEnabled}" />
+                                        <ComboBox ItemsSource="{Binding AvailableLanguageCodes}"
+                                                  SelectedItem="{Binding SelectedLanguageCode}"
+                                                  HorizontalAlignment="Stretch"
+                                                  IsEnabled="{Binding OcrEnabled}"
+                                                  automation:AutomationProperties.LabeledBy="{Binding #OcrLanguageLabel}" />
+                                        <TextBlock Classes="warn" Text="{Binding NoOcrLanguagesText}"
+                                                   IsVisible="{Binding NoOcrLanguagesText, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                                        <!-- Likewise covered by the ComboBox's validation adornment. -->
+                                    </StackPanel>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+
+        </DockPanel>
+
+        <!-- Splitter -->
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
+                      Background="{DynamicResource BorderSubtle}"
+                      ResizeBehavior="PreviousAndNext" />
+
+        <!-- Image preview panel -->
+        <Panel Grid.Column="2" Background="{DynamicResource SurfaceWell}">
+            <!-- Placeholder when no preview -->
+            <StackPanel IsVisible="{Binding PreviewImagePath, Converter={StaticResource IsNullConverter}}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" Margin="20">
+                <TextBlock Text="NOTHING FILED YET"
+                           FontFamily="{DynamicResource FontDisplay}"
+                           FontWeight="SemiBold"
+                           FontSize="{DynamicResource FontSizeTitle}"
+                           LetterSpacing="2"
+                           Foreground="{DynamicResource TextMuted}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Scanned pages land here."
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextMuted}"
+                           TextAlignment="Center"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Preview image -->
+            <Image Source="{Binding PreviewImagePath, Converter={StaticResource PathToBitmapConverter}}"
+                   IsVisible="{Binding PreviewImagePath, Converter={StaticResource IsNotNullConverter}}"
+                   Stretch="Uniform"
+                   Margin="24" />
+        </Panel>
+
+    </Grid>
+</Window>

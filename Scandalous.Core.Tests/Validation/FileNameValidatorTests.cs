@@ -1,4 +1,5 @@
 using Scandalous.Core.Validation;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace Scandalous.Core.Tests.Validation
@@ -64,6 +65,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithInvalidCharacters_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '<' and '>' are valid filename chars on non-Windows platforms");
             // Arrange
             var fileName = "file<name>.txt";
 
@@ -78,6 +81,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithMultipleInvalidCharacters_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: '<', '>', '|', '*', '?' are valid filename chars on non-Windows platforms");
             // Arrange
             var fileName = "file<name>|with*invalid?chars.txt";
 
@@ -92,6 +97,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithReservedName_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Arrange
             var fileName = "CON.txt";
 
@@ -106,6 +113,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithReservedNameInDifferentCase_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Arrange
             var fileName = "con.txt";
 
@@ -120,6 +129,8 @@ namespace Scandalous.Core.Tests.Validation
         [Fact]
         public void IsValid_WithReservedNameWithExtension_ReturnsFalse()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Arrange
             var fileName = "COM1.txt";
 
@@ -352,6 +363,8 @@ namespace Scandalous.Core.Tests.Validation
         [InlineData("LPT9")]
         public void IsValid_WithAllReservedNames_ReturnsFalse(string reservedName)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Act
             var (isValid, errorMessage) = FileNameValidator.IsValid(reservedName);
 
@@ -369,6 +382,8 @@ namespace Scandalous.Core.Tests.Validation
         [InlineData("LPT1.txt")]
         public void IsValid_WithReservedNamesWithExtensions_ReturnsFalse(string reservedNameWithExt)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Windows-only: reserved names are not restricted on non-Windows platforms");
             // Act
             var (isValid, errorMessage) = FileNameValidator.IsValid(reservedNameWithExt);
 

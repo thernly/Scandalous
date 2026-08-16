@@ -2,6 +2,7 @@ using NSubstitute;
 using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
 using Scandalous.Core.Services;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Xunit;
 using System.IO;
@@ -47,6 +48,7 @@ namespace Scandalous.Core.Tests.Services
             Assert.True(result.ExcludeBlankPages);
             Assert.Equal(300, result.ScanResolutionDPI);
             Assert.Equal(ScannerPaperSource.Auto, result.ScannerPaperSource);
+            Assert.Equal(ScannerPaperSize.Letter, result.PaperSize);
             Assert.False(result.OcrEnabled);
             Assert.Equal(string.Empty, result.TessdataFolder);
             Assert.Equal("eng", result.TessdataLanguageCode);
@@ -69,7 +71,8 @@ namespace Scandalous.Core.Tests.Services
                 scannerPaperSource: ScannerPaperSource.FeederDuplex,
                 ocrEnabled: true,
                 tessdataFolder: "C:\\tessdata",
-                languageCode: "deu"
+                languageCode: "deu",
+                paperSize: ScannerPaperSize.A4
             );
 
             // Act
@@ -85,6 +88,7 @@ namespace Scandalous.Core.Tests.Services
             Assert.Equal(originalConfig.ExcludeBlankPages, loadedConfig.ExcludeBlankPages);
             Assert.Equal(originalConfig.ScanResolutionDPI, loadedConfig.ScanResolutionDPI);
             Assert.Equal(originalConfig.ScannerPaperSource, loadedConfig.ScannerPaperSource);
+            Assert.Equal(originalConfig.PaperSize, loadedConfig.PaperSize);
             Assert.Equal(originalConfig.OcrEnabled, loadedConfig.OcrEnabled);
             Assert.Equal(originalConfig.TessdataFolder, loadedConfig.TessdataFolder);
             Assert.Equal(originalConfig.TessdataLanguageCode, loadedConfig.TessdataLanguageCode);
@@ -118,6 +122,51 @@ namespace Scandalous.Core.Tests.Services
             // Assert
             Assert.NotNull(result);
             Assert.Empty(result);
+        }
+
+        [Fact]
+        public void GetInstalledTessdataLanguageCodes_SortsCodesOrdinalCaseInsensitive()
+        {
+            // Arrange
+            var tempDir = Directory.CreateTempSubdirectory("scandalous-tessdata-");
+            try
+            {
+                File.WriteAllText(Path.Combine(tempDir.FullName, "fra.traineddata"), "");
+                File.WriteAllText(Path.Combine(tempDir.FullName, "eng.traineddata"), "");
+                File.WriteAllText(Path.Combine(tempDir.FullName, "deu.traineddata"), "");
+
+                var configManager = new ConfigurationManager();
+
+                // Act
+                var result = configManager.GetInstalledTessdataLanguageCodes(tempDir.FullName);
+
+                // Assert
+                Assert.Equal(new[] { "deu", "eng", "fra" }, result);
+            }
+            finally
+            {
+                Directory.Delete(tempDir.FullName, recursive: true);
+            }
+        }
+
+        [Fact]
+        public void GetBestLanguageCode_ReturnsCanonicalAvailableCodeForCaseInsensitiveMatch()
+        {
+            var tempDir = Directory.CreateTempSubdirectory("scandalous-tessdata-");
+            try
+            {
+                File.WriteAllText(Path.Combine(tempDir.FullName, "eng.traineddata"), "");
+                File.WriteAllText(Path.Combine(tempDir.FullName, "deu.traineddata"), "");
+
+                var service = new LanguageCodeService(new ConfigurationManager());
+
+                Assert.Equal("eng", service.GetBestLanguageCode(tempDir.FullName, "ENG"));
+                Assert.Equal("deu", service.GetBestLanguageCode(tempDir.FullName, "DEU"));
+            }
+            finally
+            {
+                Directory.Delete(tempDir.FullName, recursive: true);
+            }
         }
 
         [Fact]
@@ -179,6 +228,7 @@ namespace Scandalous.Core.Tests.Services
             Assert.Equal("C:\\Test", result.OutputFolder);
             Assert.Equal(string.Empty, result.OutputBaseFileName);
             Assert.Equal(ScannerColorMode.Grayscale, result.ColorMode);
+            Assert.Equal(ScannerPaperSize.Letter, result.PaperSize);
         }
 
         [Fact]
@@ -195,6 +245,9 @@ namespace Scandalous.Core.Tests.Services
         [Fact]
         public async Task SaveConfigurationAsync_WithReadOnlyFile_ThrowsUnauthorizedAccessException()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Assert.Skip("Read-only attribute does not prevent owner writes on non-Windows platforms");
+
             // Arrange
             var tempFile = Path.GetTempFileName();
             var configManager = new TestableConfigurationManager(tempFile);

@@ -1,4 +1,5 @@
 using Scandalous.Core.Models;
+using Scandalous.Core.Enums;
 
 namespace Scandalous.Core.Services
 {
@@ -22,10 +23,12 @@ namespace Scandalous.Core.Services
         public bool FeederDuplex { get; set; } = false;
         public bool FeederSimplex { get; set; } = false;
         public bool Flatbed { get; set; } = false;
+        public ScannerPaperSize PaperSize { get; set; } = ScannerPaperSize.Letter;
         public int Dpi { get; set; } = 300;
         public bool OcrEnabled { get; set; } = false;
         public string TessdataFolder { get; set; } = string.Empty;
         public string SelectedLanguageCode { get; set; } = "eng";
         public string SelectedScannerName { get; set; } = string.Empty;
+        public string SelectedScannerUrl { get; set; } = string.Empty;
     }
 } 

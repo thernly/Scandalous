@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:automation="using:Avalonia.Automation"
+        x:Class="Scandalous.Avalonia.Views.MessageDialog"
+        Title="Scandalous"
+        Width="400" Height="200"
+        MinWidth="300" MinHeight="150"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+    <Grid RowDefinitions="*,Auto" Margin="20">
+        <TextBlock Grid.Row="0"
+                   Name="MessageText"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Center"
+                   automation:AutomationProperties.LiveSetting="Polite" />
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button Name="PrimaryButton" Content="OK" MinWidth="90" IsDefault="True" Click="PrimaryButton_Click" />
+            <Button Name="SecondaryButton" Content="Cancel" MinWidth="90" IsCancel="True" Click="SecondaryButton_Click" IsVisible="False" />
+        </StackPanel>
+    </Grid>
+</Window>

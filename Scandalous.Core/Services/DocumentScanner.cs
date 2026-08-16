@@ -1,11 +1,11 @@
 using NAPS2.Images;
-using NAPS2.Images.Gdi;
 using NAPS2.Ocr;
 using NAPS2.Pdf;
 using NAPS2.Scan;
 using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Scandalous.Core.Services
 {
@@ -16,13 +16,13 @@ namespace Scandalous.Core.Services
         public event EventHandler<PageScannedEventArgs>? PageScanned;
         private bool _disposed = false;
 
-        public DocumentScanner()
+        public DocumentScanner(ImageContext imageContext)
         {
-            _scanningContext = new ScanningContext(new GdiImageContext());
+            _scanningContext = new ScanningContext(imageContext);
             _scanController = new ScanController(_scanningContext);
         }
 
-        public async Task<string> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
+        public async Task<ScanResult> ScanDocuments(ScanConfiguration configuration, CancellationToken cancellationToken = default, Func<Task<bool>>? promptForMorePages = null)
         {
             ThrowIfDisposed();
 
@@ -38,13 +38,23 @@ namespace Scandalous.Core.Services
                 throw new ArgumentException("Output base file name cannot be null, empty, or whitespace.", nameof(configuration));
             }
 
-            var deviceList = await _scanController.GetDeviceList();
-            var device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName) ?? throw new InvalidOperationException("The selected scanner is offline.");
+            // Re-discover the scanner at scan time to get a fresh ScanDevice handle.
+            var deviceList = await DiscoverDevicesAsync(TimeSpan.FromSeconds(10), cancellationToken);
+            var device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName);
+
+            if (device == null)
+            {
+                // Fall back to a longer discovery timeout.
+                deviceList = await DiscoverDevicesAsync(TimeSpan.FromSeconds(20), cancellationToken);
+                device = deviceList.FirstOrDefault(d => d.Name == configuration.SelectedScannerName);
+            }
+
+            if (device == null)
+                throw new InvalidOperationException("The selected scanner is offline.");
             var options = PrepareScanOptions(device, configuration);
             List<ProcessedImage> processedImages = [];
             var imageFiles = new List<string>();
-
-            string outputPath = string.Empty;
+            var outputFiles = new List<string>();
             try
             {
                 (var batch, var batchFiles) = await PerformScanning(options, cancellationToken);
@@ -65,20 +75,25 @@ namespace Scandalous.Core.Services
 
                 if (processedImages.Count > 0)
                 {
-                    outputPath = await ExportImagesToPdfAsync(configuration, processedImages, cancellationToken);
+                    outputFiles = await ExportImagesToPdfAsync(configuration, processedImages, cancellationToken);
                 }
+
+                return new ScanResult
+                {
+                    CapturedPageCount = processedImages.Count,
+                    OutputFiles = outputFiles
+                };
             }
             finally
             {
                 CleanUpImageFiles(imageFiles);
                 DisposeImages(processedImages);
             }
-            return outputPath;
         }
 
         private static ScanOptions PrepareScanOptions(ScanDevice device, ScanConfiguration configuration)
         {
-            var options = GetScanOptions(device, configuration.ColorMode, configuration.ScannerPaperSource);
+            var options = GetScanOptions(device, configuration.ColorMode, configuration.ScannerPaperSource, configuration.PaperSize);
             options.AutoDeskew = configuration.AutoDeskew;
             options.ExcludeBlankPages = configuration.ExcludeBlankPages;
             options.Dpi = configuration.ScanResolutionDPI;
@@ -87,12 +102,15 @@ namespace Scandalous.Core.Services
 
         private async Task<(List<ProcessedImage> scannedImages, List<string> tempFiles)> PerformScanning(ScanOptions scanOptions, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var images = new List<ProcessedImage>();
             var tempFiles = new List<string>();
             var tempFolder = Path.GetTempPath();
 
             await foreach (var image in _scanController.Scan(scanOptions, cancellationToken).WithCancellation(cancellationToken))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 images.Add(image);
                 Guid guid = Guid.CreateVersion7();
                 var outputFile = Path.Combine(tempFolder, $"scan-{guid}.png");
@@ -103,8 +121,10 @@ namespace Scandalous.Core.Services
             return (images, tempFiles);
         }
 
-        private async Task<string> ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
+        private async Task<List<string>> ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (configuration.OcrEnabled)
             {
                 _scanningContext.OcrEngine = TesseractOcrEngine.Bundled(configuration.TessdataFolder);
@@ -112,19 +132,22 @@ namespace Scandalous.Core.Services
             var pdfExporter = new PdfExporter(_scanningContext);
             if (configuration.DocumentOptions == DocumentOptions.Combined)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
-                await ExportPdfAsync(pdfExporter, outputFile, processedImages, configuration.OcrEnabled);
-                return outputFile;
+                await ExportPdfAsync(pdfExporter, outputFile, processedImages, configuration.OcrEnabled, configuration.TessdataLanguageCode);
+                return [outputFile];
             }
             else
             {
+                var outputFiles = new List<string>(processedImages.Count);
                 foreach (var image in processedImages)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var outputFile = GetAvailableFilePath(configuration.OutputFolder, configuration.OutputBaseFileName);
-                    await ExportPdfAsync(pdfExporter, outputFile, [image], configuration.OcrEnabled);
+                    await ExportPdfAsync(pdfExporter, outputFile, [image], configuration.OcrEnabled, configuration.TessdataLanguageCode);
+                    outputFiles.Add(outputFile);
                 }
-                return string.Empty;
+                return outputFiles;
             }
         }
 
@@ -144,11 +167,12 @@ namespace Scandalous.Core.Services
             }
         }
 
-        private static async Task ExportPdfAsync(PdfExporter pdfExporter, string outputFile, IList<ProcessedImage> images, bool ocrEnabled)
+        private static async Task ExportPdfAsync(PdfExporter pdfExporter, string outputFile, IList<ProcessedImage> images, bool ocrEnabled, string languageCode)
         {
             if (ocrEnabled)
             {
-                await pdfExporter.Export(outputFile, images, ocrParams: new OcrParams("eng"));
+                var selectedLanguage = string.IsNullOrWhiteSpace(languageCode) ? "eng" : languageCode;
+                await pdfExporter.Export(outputFile, images, ocrParams: new OcrParams(selectedLanguage));
             }
             else
             {
@@ -185,7 +209,7 @@ namespace Scandalous.Core.Services
         }
 
 
-        private static ScanOptions GetScanOptions(ScanDevice device, ScannerColorMode colorMode, ScannerPaperSource scannerPaperSource)
+        private static ScanOptions GetScanOptions(ScanDevice device, ScannerColorMode colorMode, ScannerPaperSource scannerPaperSource, ScannerPaperSize scannerPaperSize)
         {
             var options = new ScanOptions
             {
@@ -197,13 +221,20 @@ namespace Scandalous.Core.Services
                     ScannerPaperSource.FeederDuplex => PaperSource.Duplex,
                     _ => PaperSource.Auto // Default to Auto if unspecified or for ScannerPaperSource.Auto
                 },
-                PageSize = PageSize.Letter, // Consider making this configurable
+                PageSize = GetPageSize(scannerPaperSize),
                 Dpi = 300, // Default DPI, overridden by configuration.ScanResolutionDPI
                 BitDepth = GetBitDepth(colorMode),
             };
 
             return options;
         }
+
+        private static PageSize GetPageSize(ScannerPaperSize size) => size switch
+        {
+            ScannerPaperSize.A4 => PageSize.A4,
+            ScannerPaperSize.Legal => PageSize.Legal,
+            _ => PageSize.Letter
+        };
 
         private static BitDepth GetBitDepth(ScannerColorMode mode) => mode switch
         {
@@ -222,9 +253,36 @@ namespace Scandalous.Core.Services
         public async Task<List<ScanDevice>> GetScanDevicesAsync()
         {
             ThrowIfDisposed();
-            
-            var deviceList = await _scanController.GetDeviceList();
-            return deviceList;
+            return await DiscoverDevicesAsync(TimeSpan.FromSeconds(3));
+        }
+
+        private async Task<List<ScanDevice>> DiscoverDevicesAsync(
+            TimeSpan timeout, CancellationToken ct = default)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                return await MacEsclDiscoveryService.DiscoverAsync(timeout, ct);
+
+            var driver = GetPlatformDriver();
+            var devices = new List<ScanDevice>();
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(timeout);
+            try
+            {
+                await foreach (var device in _scanController.GetDevices(driver, cts.Token))
+                    devices.Add(device);
+            }
+            catch (OperationCanceledException)
+            {
+                // Timeout expired — return whatever was found
+            }
+            return devices;
+        }
+
+        private static Driver GetPlatformDriver()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return Driver.Default;  // WIA
+            return Driver.Sane;         // SANE airscan backend on Linux
         }
 
         protected virtual void OnPageScanned(string imageFilePath)
@@ -253,7 +311,6 @@ namespace Scandalous.Core.Services
             {
                 disposableContext.Dispose();
             }
-
             // Free unmanaged resources (unmanaged objects) and override a finalizer below.
             // Set large fields to null.
             _disposed = true;
