@@ -1,0 +1,169 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ====================================================================
+         The rail is organised as manila divider tabs. A section is a card
+         with a colour-coded tab protruding from its top-left corner — the
+         shape of a real file divider. This replaces the eight <Separator>
+         rules that previously did all the grouping work.
+         ==================================================================== -->
+
+    <!-- The protruding tab. Rounded on top only; it sits flush on its card. -->
+    <Style Selector="Border.tab">
+        <Setter Property="CornerRadius" Value="5,5,0,0" />
+        <Setter Property="Padding" Value="{DynamicResource SpaceTab}" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <!-- The card body. Top-left corner stays square so the tab meets it
+         cleanly, exactly as a folder tab joins its folder. -->
+    <Style Selector="Border.card">
+        <Setter Property="CornerRadius" Value="0,5,5,5" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceCard}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="{DynamicResource SpaceCard}" />
+    </Style>
+
+    <!-- Tab lettering: Jost, uppercase, widely tracked — the typographic
+         register of a 1970s filing cabinet label. -->
+    <Style Selector="TextBlock.tabLabel">
+        <Setter Property="FontFamily" Value="{DynamicResource FontDisplay}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMicro}" />
+        <Setter Property="LetterSpacing" Value="1.4" />
+    </Style>
+
+    <Style Selector="TextBlock.fieldLabel">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Read-only path displays. Opacity="0.7" previously stood in for a
+         muted colour; a real token survives the theme switch. -->
+    <Style Selector="TextBlock.pathValue">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.error">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMicro}" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style Selector="TextBlock.warn">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMicro}" />
+        <Setter Property="Foreground" Value="{DynamicResource WarnBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- The primary action carries the icon's accent. Jost gives it the same
+         voice as the tabs, so the one loud control matches the identity. -->
+    <Style Selector="Button.scan">
+        <Setter Property="FontFamily" Value="{DynamicResource FontDisplay}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeTitle}" />
+        <Setter Property="LetterSpacing" Value="1.2" />
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="0,9" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.scan:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+        <Setter Property="Opacity" Value="0.88" />
+    </Style>
+    <Style Selector="Button.scan:disabled /template/ ContentPresenter">
+        <Setter Property="Opacity" Value="0.4" />
+    </Style>
+
+    <!-- Cancel sits beside Scan, so it has to speak in the same voice: same
+         face, same tracking, same height — outlined instead of filled, since
+         it is the secondary action. Fluent's stock disabled state rendered it
+         as pale grey on a grey fill, which was effectively unreadable. -->
+    <Style Selector="Button.cancel">
+        <Setter Property="FontFamily" Value="{DynamicResource FontDisplay}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeTitle}" />
+        <Setter Property="LetterSpacing" Value="1.2" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="0,9" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.cancel /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+    </Style>
+    <Style Selector="Button.cancel:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <Style Selector="Button.cancel:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+    </Style>
+    <!-- Disabled stays legible: a muted outline, not a grey slab. -->
+    <Style Selector="Button.cancel:disabled /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+        <Setter Property="Opacity" Value="0.65" />
+    </Style>
+
+    <!-- The rail's identity strip, which also fills the extended title bar. -->
+    <Style Selector="TextBlock.wordmark">
+        <Setter Property="FontFamily" Value="{DynamicResource FontDisplay}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeTitle}" />
+        <Setter Property="LetterSpacing" Value="2.5" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+    </Style>
+
+    <!-- Secondary buttons. Fluent's default fill is a neutral grey slab, which
+         reads as foreign matter against the warm surfaces; these borrow the
+         card surface and a hairline instead. -->
+    <Style Selector="Button.quiet">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.quiet /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+    </Style>
+    <Style Selector="Button.quiet:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Button.quiet:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Button.quiet:disabled /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+        <Setter Property="Opacity" Value="0.65" />
+    </Style>
+
+</Styles>

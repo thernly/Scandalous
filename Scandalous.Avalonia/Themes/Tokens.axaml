@@ -1,0 +1,132 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ====================================================================
+         Design tokens.
+
+         The palette is sampled directly from Assets/AppIcon.png — the icon's
+         sunset stripe bands. Every sampled value is mid-to-dark warm, so the
+         two paper surfaces (Manila, Carbon) are derived rather than sampled.
+
+         The saturated band colours appear only on divider tabs, the Scan
+         button, and completion. Everything else is warm neutral: this is a
+         utility people use daily, and it cannot read as a costume.
+         ==================================================================== -->
+
+    <!-- Sampled from the icon. Theme-invariant: these are the brand bands. -->
+    <Color x:Key="IconKraft">#C28A48</Color>
+    <Color x:Key="IconAmber">#EDA82E</Color>
+    <Color x:Key="IconEmber">#D55B0D</Color>
+    <Color x:Key="IconRust">#B03408</Color>
+    <Color x:Key="IconCocoa">#461A09</Color>
+    <Color x:Key="IconBitter">#280E04</Color>
+
+    <!-- Derived paper surfaces. -->
+    <Color x:Key="PaperManila">#F5EAD6</Color>
+    <Color x:Key="PaperCarbon">#2A1C10</Color>
+
+    <!-- Divider-tab bands. One per rail section, in icon order. The colour is
+         the section's identity, the way a real file tab is colour-coded — it
+         encodes which group you are in, it is not decoration. -->
+    <SolidColorBrush x:Key="TabOutputBrush" Color="#EDA82E" />
+    <SolidColorBrush x:Key="TabOutputText" Color="#461A09" />
+    <SolidColorBrush x:Key="TabScannerBrush" Color="#D55B0D" />
+    <SolidColorBrush x:Key="TabScannerText" Color="#280E04" />
+    <SolidColorBrush x:Key="TabOptionsBrush" Color="#B03408" />
+    <SolidColorBrush x:Key="TabOptionsText" Color="#F5EAD6" />
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="SurfaceBase" Color="#E8DAC0" />
+            <SolidColorBrush x:Key="SurfaceRail" Color="#F5EAD6" />
+            <SolidColorBrush x:Key="SurfaceCard" Color="#FCF6EA" />
+            <SolidColorBrush x:Key="SurfaceWell" Color="#DCCBAC" />
+            <SolidColorBrush x:Key="TextPrimary" Color="#2A1C10" />
+            <SolidColorBrush x:Key="TextSecondary" Color="#6B5238" />
+            <SolidColorBrush x:Key="TextMuted" Color="#8A6D4C" />
+            <SolidColorBrush x:Key="BorderSubtle" Color="#D9C29B" />
+            <SolidColorBrush x:Key="AccentBrush" Color="#B03408" />
+            <SolidColorBrush x:Key="AccentText" Color="#FCF6EA" />
+            <!-- Replaces the hardcoded Foreground="Red"/"Orange", which had no
+                 dark-theme variant and failed contrast on dark backgrounds. -->
+            <SolidColorBrush x:Key="DangerBrush" Color="#A32B14" />
+            <SolidColorBrush x:Key="WarnBrush" Color="#8A5410" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#5A6B22" />
+
+            <!-- Retint FluentTheme's own accent so checkboxes, focus rings and
+                 selection stop rendering in stock Windows blue. -->
+            <Color x:Key="SystemAccentColor">#B03408</Color>
+            <Color x:Key="SystemAccentColorLight1">#C4491A</Color>
+            <Color x:Key="SystemAccentColorLight2">#D55B0D</Color>
+            <Color x:Key="SystemAccentColorLight3">#EDA82E</Color>
+            <Color x:Key="SystemAccentColorDark1">#94290A</Color>
+            <Color x:Key="SystemAccentColorDark2">#78210A</Color>
+            <Color x:Key="SystemAccentColorDark3">#461A09</Color>
+            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#B03408" />
+            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#C4491A" />
+            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#D55B0D" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FCF6EA" />
+
+            <!-- Fluent's semantic fills, retinted. StatusKindToBrushConverter
+                 resolves these by key, so the status area follows automatically. -->
+            <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#A32B14" />
+            <SolidColorBrush x:Key="SystemFillColorCautionBrush" Color="#8A5410" />
+            <SolidColorBrush x:Key="SystemFillColorSuccessBrush" Color="#5A6B22" />
+            <SolidColorBrush x:Key="SystemFillColorAttentionBrush" Color="#B03408" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="SurfaceBase" Color="#1C1209" />
+            <SolidColorBrush x:Key="SurfaceRail" Color="#2A1C10" />
+            <SolidColorBrush x:Key="SurfaceCard" Color="#35240F" />
+            <SolidColorBrush x:Key="SurfaceWell" Color="#150D06" />
+            <SolidColorBrush x:Key="TextPrimary" Color="#F5EAD6" />
+            <SolidColorBrush x:Key="TextSecondary" Color="#C9AE86" />
+            <SolidColorBrush x:Key="TextMuted" Color="#9C8260" />
+            <SolidColorBrush x:Key="BorderSubtle" Color="#4A3418" />
+            <SolidColorBrush x:Key="AccentBrush" Color="#EDA82E" />
+            <SolidColorBrush x:Key="AccentText" Color="#280E04" />
+            <SolidColorBrush x:Key="DangerBrush" Color="#E8736B" />
+            <SolidColorBrush x:Key="WarnBrush" Color="#EDA82E" />
+            <SolidColorBrush x:Key="SuccessBrush" Color="#A8BE55" />
+
+            <Color x:Key="SystemAccentColor">#EDA82E</Color>
+            <Color x:Key="SystemAccentColorLight1">#F2B85A</Color>
+            <Color x:Key="SystemAccentColorLight2">#F5C87E</Color>
+            <Color x:Key="SystemAccentColorLight3">#F8D9A6</Color>
+            <Color x:Key="SystemAccentColorDark1">#D55B0D</Color>
+            <Color x:Key="SystemAccentColorDark2">#B03408</Color>
+            <Color x:Key="SystemAccentColorDark3">#461A09</Color>
+            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#EDA82E" />
+            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#D99722" />
+            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#C4861B" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#280E04" />
+
+            <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#E8736B" />
+            <SolidColorBrush x:Key="SystemFillColorCautionBrush" Color="#EDA82E" />
+            <SolidColorBrush x:Key="SystemFillColorSuccessBrush" Color="#A8BE55" />
+            <SolidColorBrush x:Key="SystemFillColorAttentionBrush" Color="#EDA82E" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- Type. Jost (OFL, instanced to static weights in Assets/Fonts) is the
+         period geometric — Futura is the 1970s office. Inter, already
+         registered via Program.cs WithInterFont(), stays the workhorse for
+         controls and body copy. Two faces, one period. -->
+    <FontFamily x:Key="FontDisplay">avares://Scandalous/Assets/Fonts#Jost</FontFamily>
+
+    <!-- Replaces the ad-hoc 11/12/14 sizes scattered through MainWindow. -->
+    <x:Double x:Key="FontSizeMicro">11</x:Double>
+    <x:Double x:Key="FontSizeSmall">12</x:Double>
+    <x:Double x:Key="FontSizeBody">13</x:Double>
+    <x:Double x:Key="FontSizeTitle">15</x:Double>
+    <x:Double x:Key="FontSizeDisplay">20</x:Double>
+
+    <!-- 4pt spacing scale. -->
+    <Thickness x:Key="SpaceCard">14,12,14,12</Thickness>
+    <Thickness x:Key="SpaceTab">10,3,12,3</Thickness>
+    <Thickness x:Key="SpaceRail">12</Thickness>
+
+</ResourceDictionary>

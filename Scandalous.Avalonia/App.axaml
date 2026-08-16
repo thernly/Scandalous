@@ -5,14 +5,35 @@
              Name="Scandalous"
              RequestedThemeVariant="Default">
     <Application.Styles>
-        <FluentTheme />
+        <!-- Retinting Fluent has to happen here, not in a resource dictionary:
+             the control templates resolve accent and error colours through
+             StaticResource internally, so an outside override never reaches
+             them. ColorPaletteResources is the supported seam. -->
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Light"
+                                       Accent="#B03408"
+                                       RegionColor="#F5EAD6"
+                                       ErrorText="#A32B14" />
+                <ColorPaletteResources x:Key="Dark"
+                                       Accent="#EDA82E"
+                                       RegionColor="#2A1C10"
+                                       ErrorText="#E8736B" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <StyleInclude Source="avares://Scandalous/Themes/Scandalous.axaml" />
     </Application.Styles>
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Scandalous/Themes/Tokens.axaml" />
+            </ResourceDictionary.MergedDictionaries>
         <conv:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
         <conv:EnumDisplayConverter x:Key="EnumDisplayConverter" />
         <conv:PathToBitmapConverter x:Key="PathToBitmapConverter" />
         <conv:IsNullConverter x:Key="IsNullConverter" />
         <conv:IsNotNullConverter x:Key="IsNotNullConverter" />
         <conv:StatusKindToBrushConverter x:Key="StatusKindToBrushConverter" />
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets/AppIcon.png" />
+    <AvaloniaResource Include="Assets/Fonts/*.ttf" />
   </ItemGroup>
 
   <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx'))">
