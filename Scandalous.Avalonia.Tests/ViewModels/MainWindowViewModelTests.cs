@@ -340,11 +340,20 @@ public class MainWindowViewModelTests
             languageService,
             CreateExceptionHandler());
 
-        viewModel.PaperSize = ScannerPaperSize.A4;
+        var (outputDir, tessdataDir) = SetValidState(viewModel);
 
-        await viewModel.SaveConfigurationAsync();
+        try
+        {
+            viewModel.PaperSize = ScannerPaperSize.A4;
 
-        await configManager.Received(1).SaveConfigurationAsync(Arg.Is<ScanConfiguration>(c => c.PaperSize == ScannerPaperSize.A4));
+            await viewModel.SaveConfigurationAsync();
+
+            await configManager.Received(1).SaveConfigurationAsync(Arg.Is<ScanConfiguration>(c => c.PaperSize == ScannerPaperSize.A4));
+        }
+        finally
+        {
+            Cleanup(outputDir, tessdataDir);
+        }
     }
 
     [Fact]
