@@ -1,9 +1,11 @@
 using NAPS2.Images;
+using NAPS2.Images.ImageSharp;
 using NAPS2.Ocr;
 using NAPS2.Pdf;
 using NAPS2.Scan;
 using Scandalous.Core.Enums;
 using Scandalous.Core.Models;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -16,7 +18,12 @@ namespace Scandalous.Core.Services
         public event EventHandler<PageScannedEventArgs>? PageScanned;
         private bool _disposed = false;
 
-        public DocumentScanner(ImageContext imageContext)
+        public DocumentScanner() : this(CreateImageContext())
+        {
+        }
+
+        [SuppressMessage("Usage", "CA2252:This API requires opting into preview features", Justification = "DocumentScanner intentionally encapsulates NAPS2's preview image context.")]
+        private DocumentScanner(ImageContext imageContext)
         {
             _scanningContext = new ScanningContext(imageContext);
             _scanController = new ScanController(_scanningContext);
@@ -115,11 +122,17 @@ namespace Scandalous.Core.Services
                 Guid guid = Guid.CreateVersion7();
                 var outputFile = Path.Combine(tempFolder, $"scan-{guid}.png");
                 tempFiles.Add(outputFile);
-                image.Save(outputFile, ImageFileFormat.Png);
+                SaveImageAsPng(image, outputFile);
                 OnPageScanned(outputFile);
             }
             return (images, tempFiles);
         }
+
+        [SuppressMessage("Usage", "CA2252:This API requires opting into preview features", Justification = "DocumentScanner intentionally encapsulates NAPS2's preview image APIs.")]
+        private static ImageContext CreateImageContext() => new ImageSharpImageContext();
+
+        [SuppressMessage("Usage", "CA2252:This API requires opting into preview features", Justification = "DocumentScanner intentionally encapsulates NAPS2's preview image APIs.")]
+        private static void SaveImageAsPng(ProcessedImage image, string outputFile) => image.Save(outputFile, ImageFileFormat.Png);
 
         private async Task<List<string>> ExportImagesToPdfAsync(ScanConfiguration configuration, IList<ProcessedImage> processedImages, CancellationToken cancellationToken)
         {

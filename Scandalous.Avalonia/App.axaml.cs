@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
-using NAPS2.Images.ImageSharp;
 using Scandalous.Avalonia.ViewModels;
 using Scandalous.Avalonia.Views;
 using Scandalous.Core.Services;
@@ -19,7 +18,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IDocumentScanner>(sp => new DocumentScanner(new ImageSharpImageContext()));
+        services.AddSingleton<IDocumentScanner>(sp => new DocumentScanner());
         services.AddSingleton<IConfigurationManager, ConfigurationManager>();
         services.AddSingleton<IScanConfigurationMapper, ScanConfigurationMapper>();
         services.AddSingleton<IPdfService, PdfService>();
