@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${SKIP_PRECOMMIT:-0}" == "1" ]]; then
+  echo "Skipping pre-commit checks because SKIP_PRECOMMIT=1"
+  exit 0
+fi
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+if [[ -z "$staged_files" ]]; then
+  exit 0
+fi
+
+# Only run .NET checks when source or project files are staged.
+if ! echo "$staged_files" | grep -Eq '\.(cs|csproj|sln|props|targets|axaml)$'; then
+  exit 0
+fi
+
+echo "Running pre-commit checks..."
+
+dotnet restore Scandalous.sln --nologo
+dotnet build Scandalous.sln --configuration Debug --no-restore --nologo --verbosity minimal
+
+# Keep parity with the repo's explicit test projects.
+dotnet test Scandalous.Avalonia.Tests/Scandalous.Avalonia.Tests.csproj --configuration Debug --no-build --nologo --verbosity minimal
+dotnet test Scandalous.Core.Tests/Scandalous.Core.Tests.csproj --configuration Debug --no-build --nologo --verbosity minimal
+
+echo "Pre-commit checks passed."

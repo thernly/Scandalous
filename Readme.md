@@ -75,6 +75,30 @@ Run the tests:
 dotnet test Scandalous.Core.Tests/Scandalous.Core.Tests.csproj
 ```
 
+## Git Pre-commit Hooks
+
+This repository includes a versioned pre-commit hook that runs local quality checks before each commit when scanner or project source files are staged.
+
+Install the hook once per clone:
+
+```bash
+chmod +x scripts/install-hooks.sh
+./scripts/install-hooks.sh
+```
+
+The hook performs:
+
+- `dotnet restore Scandalous.sln`
+- `dotnet build Scandalous.sln --configuration Debug --no-restore`
+- `dotnet test Scandalous.Avalonia.Tests/Scandalous.Avalonia.Tests.csproj --configuration Debug --no-build`
+- `dotnet test Scandalous.Core.Tests/Scandalous.Core.Tests.csproj --configuration Debug --no-build`
+
+Temporarily bypass hooks for an emergency commit:
+
+```bash
+SKIP_PRECOMMIT=1 git commit -m "your message"
+```
+
 ## Publish for macOS
 
 The included script publishes a self-contained macOS `.app` bundle.
